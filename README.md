@@ -47,14 +47,14 @@ The application adopts a modular Next.js App Router architecture, cleanly separa
 
 ```mermaid
 graph TD
-    User([User / Browser Client]) <--> UI[Next.js Client UI Layer]
+    User(["User / Browser Client"]) <--> UI["Next.js Client UI Layer"]
     
-    subgraph UI Layer
-        Search[Link Input & Folder Inspector]
-        Stats[Folder Stats & Capacity Header]
-        ViewToggle[Table List / Card Grid View]
-        AudioDeck[Audio Player Deck + Canvas Spectrum]
-        VideoModal[Video Theatre Modal]
+    subgraph UI_Layer["UI Layer"]
+        Search["Link Input & Folder Inspector"]
+        Stats["Folder Stats & Capacity Header"]
+        ViewToggle["Table List / Card Grid View"]
+        AudioDeck["Audio Player Deck + Canvas Spectrum"]
+        VideoModal["Video Theatre Modal"]
     end
     
     UI <--> Search
@@ -63,15 +63,15 @@ graph TD
     UI <--> AudioDeck
     UI <--> VideoModal
     
-    UI -->|1. Inspect Folder / Share Link| APIInspect[/api/terabox/inspect]
-    UI -->|2. Request Media Stream / CORS Bypass| APIStream[/api/terabox/stream]
+    UI -->|"1. Inspect Folder / Share Link"| APIInspect["/api/terabox/inspect"]
+    UI -->|"2. Request Media Stream / CORS Bypass"| APIStream["/api/terabox/stream"]
     
-    subgraph Server & Proxy Layer
-        APIInspect --> Parser[TeraBox Parser & Share API Engine]
-        APIStream --> StreamProxy[Range Request Proxy & Header Handler]
+    subgraph Server_Layer["Server & Proxy Layer"]
+        APIInspect --> Parser["TeraBox Parser & Share API Engine"]
+        APIStream --> StreamProxy["Range Request Proxy & Header Handler"]
     end
     
-    Parser <--> Cloud[TeraBox Cloud Services]
+    Parser <--> Cloud["TeraBox Cloud Services"]
     StreamProxy <--> Cloud
 ```
 
