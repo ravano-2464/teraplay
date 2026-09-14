@@ -1,5 +1,6 @@
 import { TeraBoxFile, TeraBoxFolderResult, FolderStats } from "@/types/terabox";
 import { formatBytes, formatDuration, detectFileCategory } from "./formatters";
+import { setCachedDlink } from "./dlinkCache";
 
 export interface ParsedTeraBoxInput {
   originalUrl: string;
@@ -208,41 +209,53 @@ export async function resolveTeraBoxFolder(inputUrl: string, ndusCookie?: string
         }
 
         if (rawFiles.length > 0) {
-          // Fast-fetch metadata & direct dlinks for initial batch
+          // Fast-fetch metadata (dlinks and real durations) for files
           const pathMap = new Map<string, any>();
           const allPaths: string[] = rawFiles
             .filter((item: any) => item.isdir !== 1 && item.is_dir !== 1 && item.path)
             .map((item: any) => item.path);
 
-          // Fast parallel resolution for the first up to 100 items (2 parallel batches of 50)
-          const batches = [allPaths.slice(0, 50), allPaths.slice(50, 100)].filter((b) => b.length > 0);
-          await Promise.all(
-            batches.map(async (chunk) => {
-              try {
-                const metaUrl = `https://dm.terabox.com/api/filemetas?app_id=250528&web=1&channel=dubox&clienttype=0&target=${encodeURIComponent(JSON.stringify(chunk))}&dlink=1`;
-                const metaRes = await fetch(metaUrl, {
-                  headers: {
-                    "Cookie": cleanCookie,
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-                    "Referer": "https://dm.terabox.com/main",
-                    "Accept": "application/json, text/plain, */*",
-                  },
-                  signal: AbortSignal.timeout(4000),
-                });
-                if (metaRes.ok) {
-                  const metaJson = await metaRes.json();
-                  if (metaJson && Array.isArray(metaJson.info)) {
-                    metaJson.info.forEach((infoItem: any) => {
-                      if (infoItem.path) pathMap.set(infoItem.path, infoItem);
-                      if (infoItem.fs_id) pathMap.set(String(infoItem.fs_id), infoItem);
-                    });
+          if (allPaths.length > 0) {
+            // Batch into chunks of 50 paths (TeraBox filemetas maximum optimal batch)
+            const chunks: string[][] = [];
+            for (let i = 0; i < Math.min(allPaths.length, 100); i += 50) {
+              chunks.push(allPaths.slice(i, i + 50));
+            }
+
+            await Promise.all(
+              chunks.map(async (chunk) => {
+                try {
+                  const metaUrl = `https://dm.terabox.com/api/filemetas?app_id=250528&web=1&channel=dubox&clienttype=0&target=${encodeURIComponent(JSON.stringify(chunk))}&dlink=1`;
+                  const metaRes = await fetch(metaUrl, {
+                    headers: {
+                      "Cookie": cleanCookie,
+                      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                      "Referer": "https://dm.terabox.com/main",
+                      "Accept": "application/json, text/plain, */*",
+                    },
+                    signal: AbortSignal.timeout(3500),
+                  });
+                  if (metaRes.ok) {
+                    const metaJson = await metaRes.json();
+                    if (metaJson && Array.isArray(metaJson.info)) {
+                      metaJson.info.forEach((infoItem: any) => {
+                        if (infoItem.path) {
+                          pathMap.set(infoItem.path, infoItem);
+                          if (infoItem.dlink) setCachedDlink(infoItem.path, infoItem.dlink);
+                        }
+                        if (infoItem.fs_id) {
+                          pathMap.set(String(infoItem.fs_id), infoItem);
+                          if (infoItem.dlink) setCachedDlink(String(infoItem.fs_id), infoItem.dlink);
+                        }
+                      });
+                    }
                   }
+                } catch {
+                  // route.ts handles dynamic on-demand fallback
                 }
-              } catch {
-                // stream/route.ts handles remaining files dynamically
-              }
-            })
-          );
+              })
+            );
+          }
 
           const seenIds = new Set<string>();
           const files: TeraBoxFile[] = [];
@@ -272,20 +285,15 @@ export async function resolveTeraBoxFolder(inputUrl: string, ndusCookie?: string
               const cookieParam = cleanCookie ? `&cookie=${encodeURIComponent(cleanCookie)}` : "";
               const fileParam = `&filename=${encodeURIComponent(fileName)}`;
 
+              // Stream URL with direct dlink or on-demand resolution
               const streamUrl = directDlink
                 ? `/api/terabox/stream?url=${encodeURIComponent(directDlink)}${fileParam}${cookieParam}`
                 : `/api/terabox/stream?fsId=${fsId || ""}&path=${encodeURIComponent(filePath)}${fileParam}${cookieParam}`;
 
               const downloadUrl = `${streamUrl}&download=true`;
 
-              const durationNum =
-                Number(metaInfo?.duration || item.duration || item.dur || item.play_time || item.time_length || 0) ||
-                (isMusicLike || category === "audio"
-                  ? Math.max(30, Math.min(1800, Math.round(size / (extension === "mp4" ? 180000 : 40000))))
-                  : category === "video"
-                  ? Math.max(15, Math.min(7200, Math.round(size / 300000)))
-                  : undefined);
-
+              const rawDuration = Number(metaInfo?.duration || metaInfo?.time_length || item.duration || item.dur || item.play_time || 0);
+              const durationNum = rawDuration > 0 ? rawDuration : undefined;
               const formattedDur = durationNum ? formatDuration(durationNum) : undefined;
 
               files.push({

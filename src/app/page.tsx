@@ -135,9 +135,19 @@ export default function Home() {
   useEffect(() => {
     setMounted(true);
     const saved = localStorage.getItem("terabox_ndus_cookie");
-    if (saved) {
-      setNdusCookie(saved);
-      handleValidateCookie(saved);
+    if (saved && saved.trim()) {
+      const clean = saved.trim();
+      setNdusCookie(clean);
+      handleValidateCookie(clean).then((res) => {
+        if (res && res.isValid) {
+          setFolderData((current) => {
+            if (!current) {
+              handleInspectUrl("https://dm.terabox.com/main?path=/", clean);
+            }
+            return current;
+          });
+        }
+      });
     }
   }, [handleValidateCookie]);
 
@@ -157,17 +167,22 @@ export default function Home() {
     setCurrentPage(1);
   };
 
-  const handleSaveCookie = (newCookie: string) => {
-    setNdusCookie(newCookie);
-    if (newCookie.trim()) {
-      localStorage.setItem("terabox_ndus_cookie", newCookie.trim());
-      handleValidateCookie(newCookie.trim());
+  const handleSaveCookie = async (newCookie: string) => {
+    const trimmed = newCookie.trim();
+    setNdusCookie(trimmed);
+    if (trimmed) {
+      localStorage.setItem("terabox_ndus_cookie", trimmed);
+      const res = await handleValidateCookie(trimmed);
+      if (res && res.isValid) {
+        const targetUrl =
+          folderData?.shareUrl && !folderData.shareUrl.startsWith("Custom")
+            ? folderData.shareUrl
+            : "https://dm.terabox.com/main?path=/";
+        handleInspectUrl(targetUrl, trimmed);
+      }
     } else {
       localStorage.removeItem("terabox_ndus_cookie");
       setCookieStatus("none");
-    }
-    if (folderData?.shareUrl) {
-      handleInspectUrl(folderData.shareUrl, newCookie);
     }
   };
 
@@ -175,6 +190,7 @@ export default function Home() {
     setNdusCookie("");
     setCookieStatus("none");
     localStorage.removeItem("terabox_ndus_cookie");
+    setFolderData(null);
   };
 
   const handleInspectUrl = async (url: string, cookieOverride?: string) => {
@@ -206,9 +222,6 @@ export default function Home() {
       const audioFiles = data.files.filter((f) => f.category === "audio" || f.extension === "mp4");
       if (audioFiles.length > 0) {
         setPlaylist(audioFiles as AudioTrack[]);
-        if (data.isAudioFolder) {
-          setCurrentTrack(audioFiles[0] as AudioTrack);
-        }
       }
     } catch (err: any) {
       console.error(err);
@@ -602,6 +615,10 @@ export default function Home() {
           onTogglePlay={handleTogglePlay}
           onNextTrack={handleNextTrack}
           onPrevTrack={handlePrevTrack}
+          onClosePlayer={() => {
+            setIsPlaying(false);
+            setCurrentTrack(null);
+          }}
           onOpenCookieModal={() => setIsCookieModalOpen(true)}
           onDurationLoaded={handleUpdateFileDuration}
         />

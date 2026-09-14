@@ -333,10 +333,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {savedSuccess ? (
                     <>
                       <Check className="w-4 h-4" />
-                      <span>Tersimpan!</span>
+                      <span>Memuat Drive...</span>
                     </>
                   ) : (
-                    <span>Simpan & Gunakan</span>
+                    <span>
+                      {validationResult?.status === "valid" ? "Simpan & Buka Root Drive" : "Simpan & Tampilkan File"}
+                    </span>
                   )}
                 </button>
               </div>

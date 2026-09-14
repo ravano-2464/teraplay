@@ -223,7 +223,9 @@ export const VideoModal: React.FC<VideoModalProps> = ({
             controls
             autoPlay
             playsInline
+            preload="metadata"
             onLoadedMetadata={handleLoadedMetadata}
+            onDurationChange={handleLoadedMetadata}
             className="w-full h-full object-contain"
           >
             Browser Anda tidak mendukung tag video HTML5.

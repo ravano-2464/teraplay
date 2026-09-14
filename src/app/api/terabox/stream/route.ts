@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { formatNdusCookie } from "@/lib/teraboxParser";
+import { getCachedDlink, setCachedDlink } from "@/lib/dlinkCache";
 
 function extractDlink(data: any): string | null {
   if (!data) return null;
@@ -44,10 +45,15 @@ async function resolveDirectDlink(
   cookie?: string,
   shorturl?: string | null
 ): Promise<string | null> {
-  // 1. Try Private Drive Endpoints
+  const cacheKey = `${fsId || ""}_${path || ""}_${shorturl || ""}`;
+  const cached = getCachedDlink(cacheKey) || (path ? getCachedDlink(path) : null) || (fsId ? getCachedDlink(fsId) : null);
+  if (cached) return cached;
+
+  // 1. Try Private Drive Endpoints with ndus Cookie
   if (cookie && (path || fsId)) {
     const privateEndpoints: string[] = [];
 
+    // Prioritize path with filemetas (official TeraBox endpoint for private drive files)
     if (path) {
       privateEndpoints.push(
         `https://dm.terabox.com/api/filemetas?app_id=250528&web=1&channel=dubox&clienttype=0&target=${encodeURIComponent(JSON.stringify([path]))}&dlink=1`,
@@ -57,11 +63,9 @@ async function resolveDirectDlink(
 
     if (fsId) {
       privateEndpoints.push(
-        `https://dm.terabox.com/api/filemetas?app_id=250528&web=1&channel=dubox&clienttype=0&fsids=[${fsId}]&dlink=1`,
         `https://dm.terabox.com/api/download?app_id=250528&web=1&channel=dubox&clienttype=0&fid_list=[${fsId}]`,
         `https://dm.terabox.com/api/download?app_id=250528&web=1&channel=dubox&clienttype=0&fid_list=[%22${fsId}%22]`,
         `https://www.terabox.app/api/download?app_id=250528&web=1&channel=dubox&clienttype=0&fid_list=[${fsId}]`,
-        `https://www.terabox.com/api/download?app_id=250528&web=1&channel=dubox&clienttype=0&fid_list=[${fsId}]`,
         `https://www.1024tera.com/api/download?app_id=250528&web=1&channel=dubox&clienttype=0&fid_list=[${fsId}]`
       );
     }
@@ -75,13 +79,18 @@ async function resolveDirectDlink(
             "Referer": "https://dm.terabox.com/main",
             "Accept": "application/json, text/plain, */*",
           },
-          signal: AbortSignal.timeout(6000),
+          signal: AbortSignal.timeout(4500),
         });
 
         if (res.ok) {
           const data = await res.json();
           const found = extractDlink(data);
-          if (found) return found;
+          if (found) {
+            setCachedDlink(cacheKey, found);
+            if (path) setCachedDlink(path, found);
+            if (fsId) setCachedDlink(fsId, found);
+            return found;
+          }
         }
       } catch {
         // continue
@@ -107,13 +116,17 @@ async function resolveDirectDlink(
             "Referer": "https://www.terabox.app/",
             "Accept": "application/json",
           },
-          signal: AbortSignal.timeout(6000),
+          signal: AbortSignal.timeout(4500),
         });
 
         if (shareRes.ok) {
           const shareData = await shareRes.json();
           const found = extractDlink(shareData);
-          if (found) return found;
+          if (found) {
+            setCachedDlink(cacheKey, found);
+            if (fsId) setCachedDlink(fsId, found);
+            return found;
+          }
         }
       } catch {
         // continue
@@ -135,12 +148,12 @@ export async function GET(req: NextRequest) {
   const rawCookie = searchParams.get("cookie") || req.cookies.get("terabox_ndus")?.value;
   const cookie = rawCookie ? formatNdusCookie(rawCookie) : "";
 
-  // 1. Resolve dynamic dlink if not directly provided
+  // 1. Resolve direct CDN dlink if not provided in query param
   if (!mediaUrl) {
     mediaUrl = await resolveDirectDlink(path, fsId, cookie, shorturl);
   }
 
-  // 2. If still no mediaUrl could be resolved
+  // 2. If dlink is still missing
   if (!mediaUrl) {
     return NextResponse.json(
       {
@@ -150,43 +163,45 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // 3. Proxy the media stream from TeraBox CDN with robust fallback & safe Web Stream
+  // 3. Proxy the media stream from TeraBox CDN with fast headers & safe Web Stream
   try {
     const rangeHeader = req.headers.get("range");
 
-    // Strategy 1: Fetch with Cookie & Referer
+    // Fast Strategy 1: Direct CDN Fetch (TeraBox signed download links don't require cookie)
     let mediaRes: Response | null = null;
-    const fetchHeaders: Record<string, string> = {
+    const cdnHeaders: Record<string, string> = {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-      "Referer": "https://dm.terabox.com/main",
+      "Referer": "https://www.terabox.app/",
       "Accept": "*/*",
+      "Accept-Encoding": "identity",
+      "Connection": "keep-alive",
     };
-    if (cookie) fetchHeaders["Cookie"] = cookie;
-    if (rangeHeader) fetchHeaders["Range"] = rangeHeader;
+    if (rangeHeader) cdnHeaders["Range"] = rangeHeader;
 
     try {
       mediaRes = await fetch(mediaUrl, {
-        headers: fetchHeaders,
-        signal: AbortSignal.timeout(20000),
+        headers: cdnHeaders,
+        signal: AbortSignal.timeout(8000),
         redirect: "follow",
       });
     } catch {
       mediaRes = null;
     }
 
-    // Strategy 2: If CDN returned 403/Forbidden (common when CDN doesn't accept cookies), retry without Cookie
+    // Fast Strategy 2: If CDN returned error/403, retry with Cookie & dm.terabox.com Referer
     if (!mediaRes || (!mediaRes.ok && mediaRes.status !== 206)) {
       try {
-        const cdnHeaders: Record<string, string> = {
+        const privateHeaders: Record<string, string> = {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-          "Referer": "https://www.terabox.app/",
+          "Referer": "https://dm.terabox.com/main",
           "Accept": "*/*",
         };
-        if (rangeHeader) cdnHeaders["Range"] = rangeHeader;
+        if (cookie) privateHeaders["Cookie"] = cookie;
+        if (rangeHeader) privateHeaders["Range"] = rangeHeader;
 
         const retryRes = await fetch(mediaUrl, {
-          headers: cdnHeaders,
-          signal: AbortSignal.timeout(20000),
+          headers: privateHeaders,
+          signal: AbortSignal.timeout(8000),
           redirect: "follow",
         });
 
@@ -198,7 +213,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Strategy 3: If still invalid and we have path/fsId/cookie, resolve a fresh dlink
+    // Fast Strategy 3: If still invalid (e.g. dlink expired), resolve fresh dlink
     if (!mediaRes || (!mediaRes.ok && mediaRes.status !== 206)) {
       const freshDlink = await resolveDirectDlink(path, fsId, cookie, shorturl);
       if (freshDlink && freshDlink !== mediaUrl) {
@@ -206,15 +221,14 @@ export async function GET(req: NextRequest) {
         try {
           const freshHeaders: Record<string, string> = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-            "Referer": "https://dm.terabox.com/main",
+            "Referer": "https://www.terabox.app/",
             "Accept": "*/*",
           };
-          if (cookie) freshHeaders["Cookie"] = cookie;
           if (rangeHeader) freshHeaders["Range"] = rangeHeader;
 
           const freshRes = await fetch(mediaUrl, {
             headers: freshHeaders,
-            signal: AbortSignal.timeout(20000),
+            signal: AbortSignal.timeout(8000),
             redirect: "follow",
           });
 

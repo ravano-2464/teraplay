@@ -159,7 +159,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
     }
   }, []);
 
-  // Sync media source and playback state
+  // Sync media source and playback state (Strictly On-Demand lazy streaming)
   useEffect(() => {
     if (!mediaRef.current || !currentTrack) return;
 
@@ -169,23 +169,34 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
 
     const targetUrl = currentTrack.streamUrl || currentTrack.downloadUrl || "";
 
-    if (targetUrl && media.src !== targetUrl && !media.src.endsWith(targetUrl)) {
-      setIsBuffering(true);
-      media.src = targetUrl;
-      media.load();
+    if (!targetUrl) {
+      setHasError(true);
+      setErrorMessage("File ini tidak memiliki URL streaming langsung. Pastikan file tersedia.");
+      return;
+    }
 
+    const isDifferentSrc = !media.src || (!media.src.endsWith(targetUrl) && media.src !== targetUrl);
+
+    if (isDifferentSrc) {
       if (isPlaying) {
+        setIsBuffering(true);
+        try {
+          media.pause();
+        } catch {}
+        media.src = targetUrl;
+        media.load();
         safePlay();
+      } else {
+        // Track set/selected while paused: do not trigger heavy stream download
+        media.src = targetUrl;
+        setIsBuffering(false);
       }
-    } else if (targetUrl) {
+    } else {
       if (isPlaying && media.paused) {
         safePlay();
       } else if (!isPlaying && !media.paused) {
         safePause();
       }
-    } else {
-      setHasError(true);
-      setErrorMessage("File ini tidak memiliki URL streaming langsung. Pastikan file tersedia.");
     }
   }, [currentTrack?.id, currentTrack?.streamUrl, isPlaying, safePlay, safePause]);
 
@@ -200,10 +211,30 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
     mediaRef.current.playbackRate = playbackRate;
   }, [playbackRate]);
 
+  // Reset time and duration when switching track
+  useEffect(() => {
+    setCurrentTime(0);
+    setDuration(currentTrack?.duration || 0);
+  }, [currentTrack?.id]);
+
   // Media Event Handlers
+  const updateMediaDuration = useCallback(() => {
+    if (!mediaRef.current) return;
+    const realDur = mediaRef.current.duration;
+    if (realDur && !isNaN(realDur) && isFinite(realDur) && realDur > 0) {
+      setDuration(realDur);
+      if (currentTrack) {
+        onDurationLoaded?.(currentTrack.id, realDur);
+      }
+    }
+  }, [currentTrack, onDurationLoaded]);
+
   const handleTimeUpdate = () => {
     if (mediaRef.current) {
       setCurrentTime(mediaRef.current.currentTime);
+      if (duration === 0 && mediaRef.current.duration > 0) {
+        updateMediaDuration();
+      }
       if (isBuffering && !mediaRef.current.paused) {
         setIsBuffering(false);
       }
@@ -211,22 +242,17 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   };
 
   const handleLoadedMetadata = () => {
-    if (mediaRef.current) {
-      const realDur = mediaRef.current.duration;
-      if (realDur && !isNaN(realDur) && isFinite(realDur) && realDur > 0) {
-        setDuration(realDur);
-        if (currentTrack) {
-          onDurationLoaded?.(currentTrack.id, realDur);
-        }
-      } else {
-        setDuration(currentTrack?.duration || 180);
-      }
-      setIsBuffering(false);
-      setHasError(false);
-    }
+    updateMediaDuration();
+    setIsBuffering(false);
+    setHasError(false);
+  };
+
+  const handleDurationChange = () => {
+    updateMediaDuration();
   };
 
   const handleCanPlay = () => {
+    updateMediaDuration();
     setIsBuffering(false);
     setHasError(false);
   };
@@ -376,10 +402,11 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
         <div className="relative aspect-video bg-black flex items-center justify-center">
           <video
             ref={mediaRef}
-            preload="auto"
+            preload="metadata"
             playsInline
             onTimeUpdate={handleTimeUpdate}
             onLoadedMetadata={handleLoadedMetadata}
+            onDurationChange={handleDurationChange}
             onCanPlay={handleCanPlay}
             onWaiting={handleWaiting}
             onPlaying={handlePlaying}
@@ -634,13 +661,13 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                     <input
                       type="range"
                       min={0}
-                      max={duration || 180}
+                      max={duration > 0 ? duration : 100}
                       value={currentTime}
                       onChange={handleSeek}
                       className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400 focus:outline-none"
                     />
                   </div>
-                  <span className="w-9">{formatDuration(duration)}</span>
+                  <span className="w-9">{duration > 0 ? formatDuration(duration) : "--:--"}</span>
                 </div>
               </div>
 

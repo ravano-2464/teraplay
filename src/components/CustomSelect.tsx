@@ -71,17 +71,20 @@ export function CustomSelect<T extends string | number>({
   };
 
   return (
-    <div ref={containerRef} className={`relative inline-block text-left ${className}`}>
-      {/* Trigger Button */}
+    <div
+      ref={containerRef}
+      className={`relative inline-block text-left ${isOpen ? "z-[60]" : "z-10"} ${className}`}
+    >
+      {/* Trigger Button (Solid high-contrast opaque styling) */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`group relative flex items-center justify-between gap-2.5 rounded-xl border font-medium transition-all duration-200 cursor-pointer select-none ${
-          size === "sm" ? "px-2.5 py-1.5 text-xs" : "px-3 py-2 text-xs sm:text-sm"
+        className={`group relative flex items-center justify-between gap-2.5 rounded-xl border font-semibold transition-all duration-200 cursor-pointer select-none ${
+          size === "sm" ? "px-3 py-1.5 text-xs" : "px-3.5 py-2 text-xs sm:text-sm"
         } ${
           isOpen
-            ? "bg-slate-900 border-sky-500/60 text-white shadow-lg shadow-sky-500/10 ring-2 ring-sky-500/20"
-            : "bg-slate-900/90 hover:bg-slate-850 border-slate-800 hover:border-slate-700 text-slate-200 hover:text-white"
+            ? "bg-slate-900 border-sky-500 text-white shadow-lg shadow-sky-500/20 ring-2 ring-sky-500/30"
+            : "bg-slate-900 hover:bg-slate-800 border-slate-700 hover:border-slate-600 text-white shadow-sm"
         }`}
       >
         <div className="flex items-center gap-2 truncate">
@@ -105,14 +108,14 @@ export function CustomSelect<T extends string | number>({
         </div>
       </button>
 
-      {/* Dropdown Menu Popup with Glassmorphic styling and smooth animations */}
+      {/* Dropdown Menu Popup (100% Solid opaque dark slate, no transparency) */}
       {isOpen && (
         <div
-          className={`absolute z-50 ${
+          className={`absolute z-[70] ${
             dropUp ? "bottom-full mb-2" : "top-full mt-2"
           } ${
             align === "right" ? "right-0" : "left-0"
-          } ${minWidth} rounded-2xl bg-slate-950/95 border border-sky-500/30 backdrop-blur-2xl shadow-2xl p-1.5 space-y-1 animate-in ${
+          } ${minWidth} rounded-2xl bg-slate-900 border border-slate-700 shadow-[0_20px_50px_rgba(0,0,0,0.95)] p-1.5 space-y-1 animate-in ring-1 ring-white/10 ${
             dropUp ? "slide-in-from-bottom-2" : "slide-in-from-top-2"
           } fade-in zoom-in-95 duration-200`}
         >
@@ -125,8 +128,8 @@ export function CustomSelect<T extends string | number>({
                 onClick={() => handleSelect(option.value)}
                 className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer ${
                   isSelected
-                    ? "bg-gradient-to-r from-sky-500/20 to-indigo-500/20 text-white border border-sky-500/40 shadow-sm"
-                    : "text-slate-300 hover:text-white hover:bg-slate-900 border border-transparent"
+                    ? "bg-sky-500/25 text-sky-200 border border-sky-500/50 shadow-sm font-bold"
+                    : "text-slate-200 hover:text-white bg-slate-900 hover:bg-slate-800 border border-transparent"
                 }`}
               >
                 <div className="flex items-center gap-2 truncate">
@@ -140,7 +143,7 @@ export function CustomSelect<T extends string | number>({
 
                 <div className="flex items-center gap-1.5 shrink-0">
                   {option.badge !== undefined && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-400 border border-white/5">
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-white/10">
                       {option.badge}
                     </span>
                   )}

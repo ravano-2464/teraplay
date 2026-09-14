@@ -259,9 +259,9 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
       </div>
 
       {/* Prominent Search, Category Filters & Sort Controls Bar */}
-      <div className="glass-panel rounded-2xl p-4 border border-white/10 bg-slate-950/80 flex flex-col gap-3 shadow-lg">
+      <div className="glass-panel rounded-2xl p-4 border border-white/10 bg-slate-950/80 flex flex-col gap-3 shadow-lg relative z-30">
         {/* Top Row: Search Input & Controls */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 relative z-40">
           {/* Main Search Input Box */}
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-white z-10 pointer-events-none drop-shadow-sm" />
@@ -295,7 +295,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
           </div>
 
           {/* Sort selector & View toggle */}
-          <div className="flex items-center gap-2 self-end sm:self-auto">
+          <div className="flex items-center gap-2 self-end sm:self-auto relative z-50">
             {/* Sort Dropdown */}
             {onSortChange && (
               <CustomSelect
@@ -353,14 +353,14 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border cursor-pointer ${
                     isSelected
                       ? "bg-slate-100 text-slate-950 border-white shadow-md font-bold"
-                      : "bg-slate-900/80 text-slate-400 hover:text-slate-200 border-slate-800 hover:border-slate-700"
+                      : "bg-slate-900 text-slate-300 hover:text-white border-slate-700 hover:border-slate-600 hover:bg-slate-800"
                   }`}
                 >
                   <Icon className={`w-3.5 h-3.5 ${isSelected ? "text-slate-950" : cat.color || "text-slate-400"}`} />
                   <span>{cat.label}</span>
                   <span
                     className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                      isSelected ? "bg-slate-900 text-white" : "bg-slate-800 text-slate-400"
+                      isSelected ? "bg-slate-900 text-white" : "bg-slate-800 text-slate-300"
                     }`}
                   >
                     {cat.count}
@@ -389,8 +389,8 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
                   }}
                   className={`px-2 py-0.5 rounded-lg text-[11px] font-mono border transition-colors cursor-pointer whitespace-nowrap ${
                     isActive
-                      ? "bg-sky-500/20 text-sky-300 border-sky-500/40 font-bold"
-                      : "bg-slate-900/60 text-slate-400 hover:text-slate-200 border-slate-800 hover:border-slate-700"
+                      ? "bg-sky-500/25 text-sky-200 border-sky-500/50 font-bold"
+                      : "bg-slate-900 text-slate-300 hover:text-white border-slate-700 hover:border-slate-600 hover:bg-slate-800"
                   }`}
                 >
                   #{tag}

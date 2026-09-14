@@ -82,7 +82,7 @@ export const Pagination: React.FC<PaginationProps> = ({
 
   return (
     <div
-      className={`glass-panel rounded-2xl p-4 border border-white/10 bg-slate-950/70 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl text-xs select-none ${className}`}
+      className={`glass-panel rounded-2xl p-4 border border-white/10 bg-slate-950/70 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl text-xs select-none relative z-20 ${className}`}
     >
       {/* Left: Summary Info & Items Per Page Selector */}
       <div className="flex items-center gap-4 flex-wrap justify-center md:justify-start text-slate-400">
@@ -126,7 +126,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
-          className="p-1.5 rounded-xl border border-slate-800 bg-slate-900/90 text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
+          className="p-1.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
           title="Halaman Pertama"
         >
           <ChevronsLeft className="w-4 h-4" />
@@ -136,7 +136,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
-          className="p-1.5 rounded-xl border border-slate-800 bg-slate-900/90 text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
+          className="p-1.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
           title="Halaman Sebelumnya"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -164,7 +164,7 @@ export const Pagination: React.FC<PaginationProps> = ({
                 className={`min-w-[32px] h-8 px-2 rounded-xl font-bold font-mono transition-all cursor-pointer text-xs ${
                   isCurrent
                     ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/30 border border-sky-400/50"
-                    : "bg-slate-900/90 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800"
+                    : "bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700"
                 }`}
               >
                 {p}
@@ -177,7 +177,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages || totalPages === 0}
-          className="p-1.5 rounded-xl border border-slate-800 bg-slate-900/90 text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
+          className="p-1.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
           title="Halaman Berikutnya"
         >
           <ChevronRight className="w-4 h-4" />
@@ -187,7 +187,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages || totalPages === 0}
-          className="p-1.5 rounded-xl border border-slate-800 bg-slate-900/90 text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
+          className="p-1.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
           title="Halaman Terakhir"
         >
           <ChevronsRight className="w-4 h-4" />
