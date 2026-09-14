@@ -20,6 +20,16 @@ export function parseTeraBoxUrl(inputUrl: string): ParsedTeraBoxInput {
       return { originalUrl: inputUrl, isValid: false, domain: "" };
     }
 
+    // Direct folder path input (e.g. "/Music" or "/Movies/Action")
+    if (trimmed.startsWith("/")) {
+      return {
+        originalUrl: trimmed,
+        folderPath: trimmed,
+        isValid: true,
+        domain: "dm.terabox.com",
+      };
+    }
+
     const urlObj = new URL(trimmed.startsWith("http") ? trimmed : `https://${trimmed}`);
     const domain = urlObj.hostname.toLowerCase();
     const searchParams = urlObj.searchParams;
@@ -145,40 +155,38 @@ export async function resolveTeraBoxFolder(inputUrl: string, ndusCookie?: string
 
       try {
         let rawFiles: any[] = [];
-        let pathsToTry = [requestedPath];
-        if (requestedPath !== "/") {
-          pathsToTry.push("/");
-        }
+        const targetPath = requestedPath.startsWith("/") ? requestedPath : `/${requestedPath}`;
+        let page = 1;
+        const pageSize = 100;
+        let hasMore = true;
+        const maxPages = 30;
+        let currentPathFiles: any[] = [];
+        let isFolderAccessible = false;
 
-        for (const targetPath of pathsToTry) {
-          let page = 1;
-          const pageSize = 100;
-          let hasMore = true;
-          const maxPages = 30;
-          let currentPathFiles: any[] = [];
+        while (hasMore && page <= maxPages) {
+          const apiUrl = `https://dm.terabox.com/api/list?dir=${encodeURIComponent(targetPath)}&order=time&desc=1&clienttype=0&app_id=250528&web=1&page=${page}&num=${pageSize}&dlink=1`;
 
-          while (hasMore && page <= maxPages) {
-            const apiUrl = `https://dm.terabox.com/api/list?dir=${encodeURIComponent(targetPath)}&order=time&desc=1&clienttype=0&app_id=250528&web=1&page=${page}&num=${pageSize}&dlink=1`;
+          const res = await fetch(apiUrl, {
+            headers: {
+              "Cookie": cleanCookie,
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+              "Referer": "https://dm.terabox.com/main",
+              "Accept": "application/json, text/plain, */*",
+            },
+            signal: AbortSignal.timeout(10000),
+          });
 
-            const res = await fetch(apiUrl, {
-              headers: {
-                "Cookie": cleanCookie,
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-                "Referer": "https://dm.terabox.com/main",
-                "Accept": "application/json, text/plain, */*",
-              },
-              signal: AbortSignal.timeout(10000),
-            });
+          if (!res.ok) break;
 
-            if (!res.ok) break;
+          const data = await res.json();
+          if (data?.errno === -6) {
+            authFailed = true;
+            break;
+          }
 
-            const data = await res.json();
-            if (data?.errno === -6) {
-              authFailed = true;
-              break;
-            }
-
-            if (data && data.errno === 0 && Array.isArray(data.list) && data.list.length > 0) {
+          if (data && data.errno === 0) {
+            isFolderAccessible = true;
+            if (Array.isArray(data.list) && data.list.length > 0) {
               currentPathFiles.push(...data.list);
               if (data.list.length < pageSize || data.has_more === 0) {
                 hasMore = false;
@@ -188,14 +196,15 @@ export async function resolveTeraBoxFolder(inputUrl: string, ndusCookie?: string
             } else {
               hasMore = false;
             }
+          } else {
+            hasMore = false;
           }
+        }
 
-          if (currentPathFiles.length > 0) {
-            rawFiles = currentPathFiles;
-            activePath = targetPath;
-            folderTitle = targetPath === "/" ? "Root Drive (/)" : targetPath.split("/").filter(Boolean).pop() || "TeraBox Folder";
-            break;
-          }
+        if (isFolderAccessible) {
+          rawFiles = currentPathFiles;
+          activePath = targetPath;
+          folderTitle = targetPath === "/" ? "Root Drive (/)" : targetPath.split("/").filter(Boolean).pop() || "TeraBox Folder";
         }
 
         if (rawFiles.length > 0) {
@@ -260,13 +269,14 @@ export async function resolveTeraBoxFolder(inputUrl: string, ndusCookie?: string
               const filePath = item.path || `${activePath}/${fileName}`;
               const metaInfo = pathMap.get(filePath) || (fsId ? pathMap.get(fsId) : null);
               const directDlink = metaInfo?.dlink || item.dlink;
-              const cookieParam = `&cookie=${encodeURIComponent(cleanCookie)}`;
+              const cookieParam = cleanCookie ? `&cookie=${encodeURIComponent(cleanCookie)}` : "";
+              const fileParam = `&filename=${encodeURIComponent(fileName)}`;
 
               const streamUrl = directDlink
-                ? `/api/terabox/stream?url=${encodeURIComponent(directDlink)}${cookieParam}`
-                : `/api/terabox/stream?fsId=${fsId || ""}&path=${encodeURIComponent(filePath)}${cookieParam}`;
+                ? `/api/terabox/stream?url=${encodeURIComponent(directDlink)}${fileParam}${cookieParam}`
+                : `/api/terabox/stream?fsId=${fsId || ""}&path=${encodeURIComponent(filePath)}${fileParam}${cookieParam}`;
 
-              const downloadUrl = `${streamUrl}&download=true&filename=${encodeURIComponent(fileName)}`;
+              const downloadUrl = `${streamUrl}&download=true`;
 
               const durationNum =
                 Number(metaInfo?.duration || item.duration || item.dur || item.play_time || item.time_length || 0) ||
@@ -409,13 +419,13 @@ export async function resolveTeraBoxFolder(inputUrl: string, ndusCookie?: string
               name: fileName,
               path: item.path || `/${fileName}`,
             });
-          } else {
             const fsId = item.fs_id ? String(item.fs_id) : undefined;
             const filePath = item.path || `/${fileName}`;
+            const fileParam = `&filename=${encodeURIComponent(fileName)}`;
             const streamUrl = item.dlink
-              ? `/api/terabox/stream?url=${encodeURIComponent(item.dlink)}`
+              ? `/api/terabox/stream?url=${encodeURIComponent(item.dlink)}${fileParam}`
               : fsId
-              ? `/api/terabox/stream?fsId=${fsId}&shorturl=${cleanSurl}&path=${encodeURIComponent(filePath)}`
+              ? `/api/terabox/stream?fsId=${fsId}&shorturl=${cleanSurl}&path=${encodeURIComponent(filePath)}${fileParam}`
               : undefined;
 
             const durationNum =

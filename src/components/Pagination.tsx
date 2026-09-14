@@ -8,6 +8,7 @@ import {
   ChevronsRight,
   SlidersHorizontal,
 } from "lucide-react";
+import { CustomSelect } from "./CustomSelect";
 
 interface PaginationProps {
   currentPage: number;
@@ -98,21 +99,24 @@ export const Pagination: React.FC<PaginationProps> = ({
         {/* Page size dropdown */}
         <div className="flex items-center gap-2">
           <span className="text-slate-400 hidden sm:inline">Per halaman:</span>
-          <select
+          <CustomSelect
             value={isAll ? 99999 : itemsPerPage}
-            onChange={(e) => {
-              const val = Number(e.target.value);
-              onItemsPerPageChange(val);
+            onChange={(val) => {
+              onItemsPerPageChange(Number(val));
               onPageChange(1);
             }}
-            className="bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1 text-slate-200 font-semibold focus:outline-none focus:border-sky-500 cursor-pointer transition-colors"
-          >
-            <option value={10}>10 file</option>
-            <option value={25}>25 file</option>
-            <option value={50}>50 file</option>
-            <option value={100}>100 file</option>
-            <option value={99999}>Semua ({totalItems})</option>
-          </select>
+            options={[
+              { value: 10, label: "10 file" },
+              { value: 25, label: "25 file" },
+              { value: 50, label: "50 file" },
+              { value: 100, label: "100 file" },
+              { value: 99999, label: `Semua (${totalItems})` },
+            ]}
+            size="sm"
+            dropUp={true}
+            align="left"
+            minWidth="min-w-[140px]"
+          />
         </div>
       </div>
 

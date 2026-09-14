@@ -25,6 +25,7 @@ interface FileTableRowProps {
   isCurrentlyPlayingAudio: boolean;
   onPlayAudio: (file: TeraBoxFile) => void;
   onOpenVideo: (file: TeraBoxFile) => void;
+  onOpenFolder?: (path: string) => void;
 }
 
 export const FileTableRow: React.FC<FileTableRowProps> = ({
@@ -33,6 +34,7 @@ export const FileTableRow: React.FC<FileTableRowProps> = ({
   isCurrentlyPlayingAudio,
   onPlayAudio,
   onOpenVideo,
+  onOpenFolder,
 }) => {
   const [copied, setCopied] = React.useState(false);
   const styling = CATEGORY_COLORS[file.category] || CATEGORY_COLORS.other;
@@ -50,7 +52,9 @@ export const FileTableRow: React.FC<FileTableRowProps> = ({
   };
 
   const handleRowClick = () => {
-    if (file.category === "audio") {
+    if (file.isDir && file.path && onOpenFolder) {
+      onOpenFolder(file.path);
+    } else if (file.category === "audio") {
       onPlayAudio(file);
     } else if (file.category === "video") {
       onOpenVideo(file);

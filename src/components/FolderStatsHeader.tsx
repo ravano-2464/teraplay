@@ -19,8 +19,10 @@ import {
   X,
   ArrowUpDown,
   Tag,
+  ArrowLeft,
 } from "lucide-react";
 import { TeraBoxFolderResult, FileCategory } from "@/types/terabox";
+import { CustomSelect } from "./CustomSelect";
 
 interface FolderStatsHeaderProps {
   folderData: TeraBoxFolderResult;
@@ -31,6 +33,7 @@ interface FolderStatsHeaderProps {
   viewMode: "grid" | "table";
   onToggleViewMode: (mode: "grid" | "table") => void;
   onPlayAllAudio: () => void;
+  onOpenFolder?: (path: string) => void;
   sortBy?: string;
   onSortChange?: (sort: string) => void;
   filteredCount?: number;
@@ -45,6 +48,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
   viewMode,
   onToggleViewMode,
   onPlayAllAudio,
+  onOpenFolder,
   sortBy = "default",
   onSortChange,
   filteredCount,
@@ -52,6 +56,30 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
   const [copied, setCopied] = React.useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { stats } = folderData;
+
+  // Generate clickable breadcrumbs from path (e.g. "/Music/Rock")
+  const pathSegments = React.useMemo(() => {
+    const rawPath = folderData.folderPath || "/";
+    if (rawPath === "/" || !rawPath.startsWith("/")) {
+      return [{ name: "Root (/)", path: "/" }];
+    }
+    const parts = rawPath.split("/").filter(Boolean);
+    const result = [{ name: "Root (/)", path: "/" }];
+    let accumulated = "";
+    parts.forEach((part) => {
+      accumulated += `/${part}`;
+      result.push({ name: part, path: accumulated });
+    });
+    return result;
+  }, [folderData.folderPath]);
+
+  const parentPath = React.useMemo(() => {
+    const rawPath = folderData.folderPath || "/";
+    if (rawPath === "/" || !rawPath.startsWith("/")) return null;
+    const parts = rawPath.split("/").filter(Boolean);
+    if (parts.length <= 1) return "/";
+    return "/" + parts.slice(0, -1).join("/");
+  }, [folderData.folderPath]);
 
   const handleCopyLink = () => {
     if (folderData.shareUrl) {
@@ -107,9 +135,43 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
                 </span>
               </div>
 
-              <p className="text-xs sm:text-sm text-slate-400 font-mono mt-1 truncate">
-                Path: <span className="text-slate-200">{folderData.folderPath}</span>
-              </p>
+              {/* Interactive Breadcrumb Trail & Back button */}
+              <div className="flex items-center gap-2 mt-2 flex-wrap text-xs">
+                {parentPath && onOpenFolder && (
+                  <button
+                    onClick={() => onOpenFolder(parentPath)}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-sky-500/20 text-slate-300 hover:text-sky-300 border border-slate-700 transition-all cursor-pointer font-semibold shadow-sm"
+                    title={`Kembali ke ${parentPath}`}
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Kembali</span>
+                  </button>
+                )}
+
+                <div className="flex items-center gap-1.5 font-mono text-slate-400 bg-slate-900/90 px-3 py-1 rounded-xl border border-slate-800/80 shadow-inner flex-wrap">
+                  {pathSegments.map((segment, idx) => {
+                    const isLast = idx === pathSegments.length - 1;
+                    return (
+                      <React.Fragment key={segment.path}>
+                        {idx > 0 && <span className="text-slate-600">/</span>}
+                        {isLast ? (
+                          <span className="text-sky-300 font-bold">{segment.name}</span>
+                        ) : onOpenFolder ? (
+                          <button
+                            type="button"
+                            onClick={() => onOpenFolder(segment.path)}
+                            className="text-slate-400 hover:text-sky-400 hover:underline cursor-pointer transition-colors"
+                          >
+                            {segment.name}
+                          </button>
+                        ) : (
+                          <span>{segment.name}</span>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
+              </div>
 
               {folderData.ownerName && (
                 <div className="flex items-center gap-2 mt-2 text-xs text-slate-400">
@@ -236,21 +298,21 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
           <div className="flex items-center gap-2 self-end sm:self-auto">
             {/* Sort Dropdown */}
             {onSortChange && (
-              <div className="flex items-center gap-1.5 bg-slate-900 px-3 py-2 rounded-xl border border-slate-800 text-xs text-slate-300">
-                <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
-                <select
-                  value={sortBy}
-                  onChange={(e) => onSortChange(e.target.value)}
-                  className="bg-transparent text-slate-200 text-xs font-semibold focus:outline-none cursor-pointer"
-                >
-                  <option value="default" className="bg-slate-900">Urutan Asli</option>
-                  <option value="name-asc" className="bg-slate-900">Nama (A - Z)</option>
-                  <option value="name-desc" className="bg-slate-900">Nama (Z - A)</option>
-                  <option value="size-desc" className="bg-slate-900">Ukuran Terbesar</option>
-                  <option value="size-asc" className="bg-slate-900">Ukuran Terkecil</option>
-                  <option value="duration-desc" className="bg-slate-900">Durasi Terpanjang</option>
-                </select>
-              </div>
+              <CustomSelect
+                value={sortBy}
+                onChange={onSortChange}
+                options={[
+                  { value: "default", label: "Urutan Asli" },
+                  { value: "name-asc", label: "Nama (A - Z)" },
+                  { value: "name-desc", label: "Nama (Z - A)" },
+                  { value: "size-desc", label: "Ukuran Terbesar" },
+                  { value: "size-asc", label: "Ukuran Terkecil" },
+                  { value: "duration-desc", label: "Durasi Terpanjang" },
+                ]}
+                icon={<ArrowUpDown className="w-3.5 h-3.5" />}
+                minWidth="min-w-[170px]"
+                size="sm"
+              />
             )}
 
             {/* View Mode Toggle */}

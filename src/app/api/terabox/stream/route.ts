@@ -16,22 +16,38 @@ function extractDlink(data: any): string | null {
   return null;
 }
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  let mediaUrl = searchParams.get("url");
-  const fsId = searchParams.get("fsId");
-  const path = searchParams.get("path");
-  const shorturl = searchParams.get("shorturl");
-  const isDownload = searchParams.get("download") === "true" || searchParams.get("dl") === "1";
-  const filenameParam = searchParams.get("filename") || (path ? path.split("/").pop() : undefined);
-  const rawCookie = searchParams.get("cookie") || req.cookies.get("terabox_ndus")?.value;
-  const cookie = rawCookie ? formatNdusCookie(rawCookie) : "";
+function detectMimeType(fileName: string, mediaUrl: string, serverContentType?: string | null): string {
+  const lowerName = fileName.toLowerCase();
+  const lowerUrl = mediaUrl.toLowerCase();
 
-  // 1. Resolve dynamic dlink from TeraBox Private Drive if (path or fsId) and Cookie are provided
-  if (!mediaUrl && cookie && (path || fsId)) {
+  if (lowerName.endsWith(".mp4") || lowerUrl.includes(".mp4")) return "video/mp4";
+  if (lowerName.endsWith(".mp3") || lowerUrl.includes(".mp3")) return "audio/mpeg";
+  if (lowerName.endsWith(".m4a") || lowerUrl.includes(".m4a")) return "audio/mp4";
+  if (lowerName.endsWith(".wav") || lowerUrl.includes(".wav")) return "audio/wav";
+  if (lowerName.endsWith(".flac") || lowerUrl.includes(".flac")) return "audio/flac";
+  if (lowerName.endsWith(".ogg") || lowerUrl.includes(".ogg")) return "audio/ogg";
+  if (lowerName.endsWith(".webm") || lowerUrl.includes(".webm")) return "video/webm";
+  if (lowerName.endsWith(".mkv") || lowerUrl.includes(".mkv")) return "video/x-matroska";
+  if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) return "image/jpeg";
+  if (lowerName.endsWith(".png")) return "image/png";
+
+  if (serverContentType && serverContentType !== "application/octet-stream" && serverContentType !== "text/plain") {
+    return serverContentType;
+  }
+
+  return "audio/mpeg";
+}
+
+async function resolveDirectDlink(
+  path?: string | null,
+  fsId?: string | null,
+  cookie?: string,
+  shorturl?: string | null
+): Promise<string | null> {
+  // 1. Try Private Drive Endpoints
+  if (cookie && (path || fsId)) {
     const privateEndpoints: string[] = [];
 
-    // Prioritize target path which is the most reliable endpoint on dm.terabox.com
     if (path) {
       privateEndpoints.push(
         `https://dm.terabox.com/api/filemetas?app_id=250528&web=1&channel=dubox&clienttype=0&target=${encodeURIComponent(JSON.stringify([path]))}&dlink=1`,
@@ -51,7 +67,6 @@ export async function GET(req: NextRequest) {
     }
 
     for (const ep of privateEndpoints) {
-      if (mediaUrl) break;
       try {
         const res = await fetch(ep, {
           headers: {
@@ -66,18 +81,16 @@ export async function GET(req: NextRequest) {
         if (res.ok) {
           const data = await res.json();
           const found = extractDlink(data);
-          if (found) {
-            mediaUrl = found;
-          }
+          if (found) return found;
         }
-      } catch (e: any) {
-        // continue to next endpoint
+      } catch {
+        // continue
       }
     }
   }
 
-  // 2. Resolve dynamic dlink from Public Share
-  if (!mediaUrl && fsId && shorturl) {
+  // 2. Try Public Share Endpoints
+  if (fsId && shorturl) {
     const cleanSurl = shorturl.replace(/^1/, "");
     const publicEndpoints = [
       `https://www.terabox.app/share/download?app_id=250528&shorturl=${cleanSurl}&fs_id=${fsId}`,
@@ -87,7 +100,6 @@ export async function GET(req: NextRequest) {
     ];
 
     for (const ep of publicEndpoints) {
-      if (mediaUrl) break;
       try {
         const shareRes = await fetch(ep, {
           headers: {
@@ -101,17 +113,34 @@ export async function GET(req: NextRequest) {
         if (shareRes.ok) {
           const shareData = await shareRes.json();
           const found = extractDlink(shareData);
-          if (found) {
-            mediaUrl = found;
-          }
+          if (found) return found;
         }
-      } catch (e: any) {
+      } catch {
         // continue
       }
     }
   }
 
-  // 3. If no mediaUrl could be resolved
+  return null;
+}
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  let mediaUrl = searchParams.get("url");
+  const fsId = searchParams.get("fsId");
+  const path = searchParams.get("path");
+  const shorturl = searchParams.get("shorturl");
+  const isDownload = searchParams.get("download") === "true" || searchParams.get("dl") === "1";
+  const filenameParam = searchParams.get("filename") || (path ? path.split("/").pop() : undefined);
+  const rawCookie = searchParams.get("cookie") || req.cookies.get("terabox_ndus")?.value;
+  const cookie = rawCookie ? formatNdusCookie(rawCookie) : "";
+
+  // 1. Resolve dynamic dlink if not directly provided
+  if (!mediaUrl) {
+    mediaUrl = await resolveDirectDlink(path, fsId, cookie, shorturl);
+  }
+
+  // 2. If still no mediaUrl could be resolved
   if (!mediaUrl) {
     return NextResponse.json(
       {
@@ -121,51 +150,101 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // 4. Proxy the media stream from TeraBox CDN with HTTP Byte-Range support
+  // 3. Proxy the media stream from TeraBox CDN with robust fallback & safe Web Stream
   try {
     const rangeHeader = req.headers.get("range");
-    const headers: Record<string, string> = {
+
+    // Strategy 1: Fetch with Cookie & Referer
+    let mediaRes: Response | null = null;
+    const fetchHeaders: Record<string, string> = {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
       "Referer": "https://dm.terabox.com/main",
       "Accept": "*/*",
     };
+    if (cookie) fetchHeaders["Cookie"] = cookie;
+    if (rangeHeader) fetchHeaders["Range"] = rangeHeader;
 
-    if (cookie) {
-      headers["Cookie"] = cookie;
+    try {
+      mediaRes = await fetch(mediaUrl, {
+        headers: fetchHeaders,
+        signal: AbortSignal.timeout(20000),
+        redirect: "follow",
+      });
+    } catch {
+      mediaRes = null;
     }
 
-    if (rangeHeader) {
-      headers["Range"] = rangeHeader;
+    // Strategy 2: If CDN returned 403/Forbidden (common when CDN doesn't accept cookies), retry without Cookie
+    if (!mediaRes || (!mediaRes.ok && mediaRes.status !== 206)) {
+      try {
+        const cdnHeaders: Record<string, string> = {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+          "Referer": "https://www.terabox.app/",
+          "Accept": "*/*",
+        };
+        if (rangeHeader) cdnHeaders["Range"] = rangeHeader;
+
+        const retryRes = await fetch(mediaUrl, {
+          headers: cdnHeaders,
+          signal: AbortSignal.timeout(20000),
+          redirect: "follow",
+        });
+
+        if (retryRes.ok || retryRes.status === 206) {
+          mediaRes = retryRes;
+        }
+      } catch {
+        // continue
+      }
     }
 
-    const mediaRes = await fetch(mediaUrl, {
-      headers,
-      signal: AbortSignal.timeout(25000),
-      redirect: "follow",
-    });
+    // Strategy 3: If still invalid and we have path/fsId/cookie, resolve a fresh dlink
+    if (!mediaRes || (!mediaRes.ok && mediaRes.status !== 206)) {
+      const freshDlink = await resolveDirectDlink(path, fsId, cookie, shorturl);
+      if (freshDlink && freshDlink !== mediaUrl) {
+        mediaUrl = freshDlink;
+        try {
+          const freshHeaders: Record<string, string> = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "Referer": "https://dm.terabox.com/main",
+            "Accept": "*/*",
+          };
+          if (cookie) freshHeaders["Cookie"] = cookie;
+          if (rangeHeader) freshHeaders["Range"] = rangeHeader;
 
-    if (!mediaRes.ok && mediaRes.status !== 206) {
-      return NextResponse.redirect(mediaUrl);
+          const freshRes = await fetch(mediaUrl, {
+            headers: freshHeaders,
+            signal: AbortSignal.timeout(20000),
+            redirect: "follow",
+          });
+
+          if (freshRes.ok || freshRes.status === 206) {
+            mediaRes = freshRes;
+          }
+        } catch {
+          // continue
+        }
+      }
     }
 
-    let contentType = mediaRes.headers.get("content-type") || "audio/mpeg";
-    if (path?.endsWith(".mp4") || mediaUrl.includes(".mp4")) {
-      contentType = "video/mp4";
-    } else if (path?.endsWith(".mp3") || mediaUrl.includes(".mp3")) {
-      contentType = "audio/mpeg";
-    } else if (path?.endsWith(".wav") || mediaUrl.includes(".wav")) {
-      contentType = "audio/wav";
+    if (!mediaRes || (!mediaRes.ok && mediaRes.status !== 206)) {
+      return NextResponse.json(
+        { error: "Gagal menghubungkan stream audio dari CDN TeraBox. Coba perbarui cookie ndus Anda." },
+        { status: mediaRes?.status || 502 }
+      );
     }
 
+    const detectedMime = detectMimeType(filenameParam || path || "", mediaUrl, mediaRes.headers.get("content-type"));
     const contentLength = mediaRes.headers.get("content-length");
     const contentRange = mediaRes.headers.get("content-range");
 
     const responseHeaders = new Headers();
-    responseHeaders.set("Content-Type", contentType);
+    responseHeaders.set("Content-Type", detectedMime);
     if (contentLength) responseHeaders.set("Content-Length", contentLength);
     if (contentRange) responseHeaders.set("Content-Range", contentRange);
     responseHeaders.set("Accept-Ranges", "bytes");
     responseHeaders.set("Access-Control-Allow-Origin", "*");
+    responseHeaders.set("Access-Control-Allow-Headers", "*");
     responseHeaders.set("Cache-Control", "public, max-age=7200");
 
     if (isDownload) {
@@ -176,19 +255,40 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Safe stream pipe that handles client cancellation without unhandledRejection
-    const { readable, writable } = new TransformStream();
-    if (mediaRes.body) {
-      mediaRes.body.pipeTo(writable).catch(() => {
-        // Gracefully ignore client connection close / abort
-      });
-    }
+    // Safe Web Stream Wrapper that completely eliminates ERR_INVALID_STATE (Controller is already closed)
+    const reader = mediaRes.body?.getReader();
+    const safeStream = new ReadableStream({
+      async pull(controller) {
+        if (!reader) {
+          try { controller.close(); } catch {}
+          return;
+        }
+        try {
+          const { done, value } = await reader.read();
+          if (done) {
+            try { controller.close(); } catch {}
+          } else {
+            try { controller.enqueue(value); } catch {}
+          }
+        } catch {
+          try { controller.close(); } catch {}
+        }
+      },
+      async cancel(reason) {
+        try {
+          await reader?.cancel(reason);
+        } catch {}
+      },
+    });
 
-    return new NextResponse(readable, {
+    return new NextResponse(safeStream, {
       status: mediaRes.status === 206 ? 206 : 200,
       headers: responseHeaders,
     });
   } catch (error: any) {
-    return NextResponse.redirect(mediaUrl);
+    return NextResponse.json(
+      { error: "Error saat proxy streaming media", details: error?.message },
+      { status: 500 }
+    );
   }
 }

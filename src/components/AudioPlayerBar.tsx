@@ -36,6 +36,8 @@ interface AudioPlayerBarProps {
   playlist: AudioTrack[];
   currentTrack: AudioTrack | null;
   isPlaying: boolean;
+  ndusCookie?: string;
+  cookieStatus?: "none" | "checking" | "valid" | "expired" | "error";
   onPlayTrack: (track: AudioTrack) => void;
   onTogglePlay: () => void;
   onNextTrack: () => void;
@@ -49,6 +51,8 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   playlist,
   currentTrack,
   isPlaying,
+  ndusCookie = "",
+  cookieStatus = "none",
   onPlayTrack,
   onTogglePlay,
   onNextTrack,
@@ -128,10 +132,10 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
       setHasError(false);
       setErrorMessage(null);
     } catch (e: any) {
-      if (e?.name !== "AbortError") {
+      if (e?.name !== "AbortError" && e?.name !== "NotAllowedError") {
         console.warn("Media play error:", e?.message);
         setHasError(true);
-        setErrorMessage("Gagal memutar media stream TeraBox. Mencoba buffer ulang...");
+        setErrorMessage("Gagal memutar media stream TeraBox. Silakan coba klik tombol play kembali.");
       }
       setIsBuffering(false);
     } finally {
@@ -183,7 +187,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
       setHasError(true);
       setErrorMessage("File ini tidak memiliki URL streaming langsung. Pastikan file tersedia.");
     }
-  }, [currentTrack, isPlaying, safePlay, safePause]);
+  }, [currentTrack?.id, currentTrack?.streamUrl, isPlaying, safePlay, safePause]);
 
   // Volume & Speed effects
   useEffect(() => {
@@ -386,23 +390,6 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
         </div>
       </div>
 
-      {/* When video preview is hidden, still render media element invisibly so audio plays */}
-      {(!showVideoPreview || !isVideoFormat) && (
-        <video
-          ref={mediaRef}
-          preload="auto"
-          playsInline
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-          onCanPlay={handleCanPlay}
-          onWaiting={handleWaiting}
-          onPlaying={handlePlaying}
-          onError={handleError}
-          onEnded={handleEnded}
-          className="hidden"
-        />
-      )}
-
       {/* Main Floating Deck */}
       <div className="fixed bottom-0 left-0 right-0 z-50 px-2 sm:px-4 pb-2 sm:pb-3 pointer-events-none">
         <div className="max-w-6xl mx-auto pointer-events-auto">
@@ -412,20 +399,24 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
               <div className="flex items-center gap-2.5 min-w-0">
                 <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
                 <div>
-                  <p className="font-bold text-white text-xs">{errorMessage || "Streaming audio TeraBox gagal dimuat."}</p>
+                  <p className="font-bold text-white text-xs">{errorMessage || "Streaming media TeraBox gagal dimuat."}</p>
                   <p className="text-[11px] text-rose-300 mt-0.5">
-                    Link private TeraBox (dm.terabox.com) memerlukan Cookie ndus untuk akses direct stream.
+                    {cookieStatus === "expired"
+                      ? "Cookie ndus Anda sudah KEDALUWARSA (Session Expired). Silakan perbarui cookie ndus terbaru dari terabox.com."
+                      : !ndusCookie
+                      ? "Link private TeraBox (dm.terabox.com) memerlukan Cookie ndus untuk akses direct stream."
+                      : "Stream mengalami gangguan buffer atau CDN TeraBox sedang sibuk. Silakan klik Coba Lagi."}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-                {onOpenCookieModal && (
+                {(!ndusCookie || cookieStatus === "expired") && onOpenCookieModal && (
                   <button
                     onClick={onOpenCookieModal}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow transition-all cursor-pointer text-xs"
                   >
                     <Key className="w-3.5 h-3.5" />
-                    <span>Set Cookie ndus</span>
+                    <span>{cookieStatus === "expired" ? "Perbarui Cookie ndus" : "Set Cookie ndus"}</span>
                   </button>
                 )}
                 <button

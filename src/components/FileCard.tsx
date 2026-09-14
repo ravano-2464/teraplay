@@ -25,6 +25,7 @@ interface FileCardProps {
   isCurrentlyPlayingAudio: boolean;
   onPlayAudio: (file: TeraBoxFile) => void;
   onOpenVideo: (file: TeraBoxFile) => void;
+  onOpenFolder?: (path: string) => void;
 }
 
 export const FileCard: React.FC<FileCardProps> = ({
@@ -32,6 +33,7 @@ export const FileCard: React.FC<FileCardProps> = ({
   isCurrentlyPlayingAudio,
   onPlayAudio,
   onOpenVideo,
+  onOpenFolder,
 }) => {
   const [copied, setCopied] = React.useState(false);
   const styling = CATEGORY_COLORS[file.category] || CATEGORY_COLORS.other;
@@ -49,7 +51,9 @@ export const FileCard: React.FC<FileCardProps> = ({
   };
 
   const handleCardClick = () => {
-    if (file.category === "audio") {
+    if (file.isDir && file.path && onOpenFolder) {
+      onOpenFolder(file.path);
+    } else if (file.category === "audio") {
       onPlayAudio(file);
     } else if (file.category === "video") {
       onOpenVideo(file);

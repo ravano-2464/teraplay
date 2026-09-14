@@ -51,8 +51,38 @@ export default function Home() {
 
   // Cookie and auth modal state
   const [ndusCookie, setNdusCookie] = useState<string>("");
+  const [cookieStatus, setCookieStatus] = useState<"none" | "checking" | "valid" | "expired" | "error">("none");
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // Validate ndus cookie status against TeraBox API
+  const handleValidateCookie = useCallback(async (cookieToTest: string) => {
+    if (!cookieToTest || !cookieToTest.trim()) {
+      setCookieStatus("none");
+      return { isValid: false, isExpired: false, status: "none", message: "Cookie kosong" };
+    }
+
+    setCookieStatus("checking");
+    try {
+      const res = await fetch("/api/terabox/validate-cookie", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cookie: cookieToTest }),
+      });
+      const data = await res.json();
+      if (data.isValid) {
+        setCookieStatus("valid");
+      } else if (data.isExpired) {
+        setCookieStatus("expired");
+      } else {
+        setCookieStatus("error");
+      }
+      return data;
+    } catch {
+      setCookieStatus("error");
+      return { isValid: false, isExpired: false, status: "error", message: "Gagal memverifikasi cookie" };
+    }
+  }, []);
 
   // Update real duration for a file across all states
   const handleUpdateFileDuration = useCallback((fileId: string, durationInSeconds: number) => {
@@ -105,8 +135,11 @@ export default function Home() {
   useEffect(() => {
     setMounted(true);
     const saved = localStorage.getItem("terabox_ndus_cookie");
-    if (saved) setNdusCookie(saved);
-  }, []);
+    if (saved) {
+      setNdusCookie(saved);
+      handleValidateCookie(saved);
+    }
+  }, [handleValidateCookie]);
 
   // Reset pagination when category, search query, or sort changes
   const handleCategoryChange = (category: string) => {
@@ -126,10 +159,22 @@ export default function Home() {
 
   const handleSaveCookie = (newCookie: string) => {
     setNdusCookie(newCookie);
-    localStorage.setItem("terabox_ndus_cookie", newCookie);
+    if (newCookie.trim()) {
+      localStorage.setItem("terabox_ndus_cookie", newCookie.trim());
+      handleValidateCookie(newCookie.trim());
+    } else {
+      localStorage.removeItem("terabox_ndus_cookie");
+      setCookieStatus("none");
+    }
     if (folderData?.shareUrl) {
       handleInspectUrl(folderData.shareUrl, newCookie);
     }
+  };
+
+  const handleClearCookie = () => {
+    setNdusCookie("");
+    setCookieStatus("none");
+    localStorage.removeItem("terabox_ndus_cookie");
   };
 
   const handleInspectUrl = async (url: string, cookieOverride?: string) => {
@@ -238,6 +283,13 @@ export default function Home() {
     setPlaylist(parsedFiles as AudioTrack[]);
     setCurrentTrack(parsedFiles[0] as AudioTrack);
     setCurrentPage(1);
+  };
+
+  // Open & navigate into subfolder on private drive
+  const handleOpenFolder = (folderPath: string) => {
+    const cleanPath = folderPath.startsWith("/") ? folderPath : `/${folderPath}`;
+    const targetUrl = `https://dm.terabox.com/main?path=${encodeURIComponent(cleanPath)}`;
+    handleInspectUrl(targetUrl);
   };
 
   // Video Player Modal Open Handler
@@ -353,7 +405,10 @@ export default function Home() {
         currentFolder={folderData?.folderName}
         isAudioDetected={folderData?.isAudioFolder}
         ndusCookie={ndusCookie}
+        cookieStatus={cookieStatus}
         onSaveCookie={handleSaveCookie}
+        onClearCookie={handleClearCookie}
+        onValidateCookie={handleValidateCookie}
         isCookieModalOpen={isCookieModalOpen}
         onToggleCookieModal={setIsCookieModalOpen}
       />
@@ -375,9 +430,14 @@ export default function Home() {
                 <Key className="w-5 h-5" />
               </div>
               <div>
-                <p className="font-bold text-white text-sm">Mode Pratinjau: Folder Private TeraBox (dm.terabox.com)</p>
+                <p className="font-bold text-white text-sm">
+                  {cookieStatus === "expired"
+                    ? "Sesi Cookie ndus Kedaluwarsa (Expired)"
+                    : "Folder Private TeraBox (dm.terabox.com)"}
+                </p>
                 <p className="text-amber-300 text-xs mt-0.5">
-                  Link ini adalah folder private TeraBox Anda. Untuk memutar stream lagu asli langsung dari akun TeraBox Anda, silakan hubungkan Cookie <code className="font-mono text-white bg-slate-900 px-1.5 py-0.5 rounded border border-amber-500/20">ndus</code> Anda.
+                  {folderData.noticeMessage ||
+                    "Link ini adalah folder private TeraBox Anda. Untuk mengakses file dan streaming, hubungkan Cookie ndus yang aktif."}
                 </p>
               </div>
             </div>
@@ -385,7 +445,7 @@ export default function Home() {
               onClick={() => setIsCookieModalOpen(true)}
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-bold text-xs shadow-md transition-all cursor-pointer whitespace-nowrap self-end sm:self-auto"
             >
-              Hubungkan Cookie ndus
+              {cookieStatus === "expired" ? "Perbarui Cookie ndus" : "Hubungkan Cookie ndus"}
             </button>
           </div>
         )}
@@ -426,6 +486,7 @@ export default function Home() {
               viewMode={viewMode}
               onToggleViewMode={setViewMode}
               onPlayAllAudio={handlePlayAllAudio}
+              onOpenFolder={handleOpenFolder}
               sortBy={sortBy}
               onSortChange={handleSortChange}
               filteredCount={filteredAndSortedFiles.length}
@@ -433,7 +494,10 @@ export default function Home() {
 
             {/* Subfolders if any */}
             {folderData.folders && folderData.folders.length > 0 && (
-              <FolderTree folders={folderData.folders} />
+              <FolderTree
+                folders={folderData.folders}
+                onOpenFolder={handleOpenFolder}
+              />
             )}
 
             {/* Files View: Table or Grid */}
@@ -465,6 +529,7 @@ export default function Home() {
                               }
                               onPlayAudio={handlePlayAudio}
                               onOpenVideo={handleOpenVideo}
+                              onOpenFolder={handleOpenFolder}
                             />
                           ))}
                         </tbody>
@@ -483,6 +548,7 @@ export default function Home() {
                         }
                         onPlayAudio={handlePlayAudio}
                         onOpenVideo={handleOpenVideo}
+                        onOpenFolder={handleOpenFolder}
                       />
                     ))}
                   </div>
@@ -530,6 +596,8 @@ export default function Home() {
           playlist={playlist}
           currentTrack={currentTrack}
           isPlaying={isPlaying}
+          ndusCookie={ndusCookie}
+          cookieStatus={cookieStatus}
           onPlayTrack={handlePlayAudio}
           onTogglePlay={handleTogglePlay}
           onNextTrack={handleNextTrack}
