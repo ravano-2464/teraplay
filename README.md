@@ -81,7 +81,6 @@ graph TD
 
 ```text
 ├── 📁 public
-│   └── 🌐 (Static Assets & Favicons)
 ├── 📁 src
 │   ├── 📁 app
 │   │   ├── 📁 api
@@ -91,39 +90,41 @@ graph TD
 │   │   │   └── 📁 terabox
 │   │   │       ├── 📁 inspect
 │   │   │       │   └── 📄 route.ts
-│   │   │       └── 📁 stream
+│   │   │       ├── 📁 stream
+│   │   │       │   └── 📄 route.ts
+│   │   │       └── 📁 validate-cookie
 │   │   │           └── 📄 route.ts
 │   │   ├── 🎨 globals.css
 │   │   ├── 🖼️ icon.svg
 │   │   ├── 📄 layout.tsx
 │   │   └── 📄 page.tsx
 │   ├── 📁 components
-│   │   ├── 🎵 AudioPlayerBar.tsx
-│   │   ├── 📊 AudioVisualizer.tsx
-│   │   ├── 🗂️ FileCard.tsx
-│   │   ├── 📋 FileTableRow.tsx
-│   │   ├── 📈 FolderStatsHeader.tsx
-│   │   ├── 🌲 FolderTree.tsx
-│   │   ├── 🔍 LinkInputSection.tsx
-│   │   ├── 🧭 Navbar.tsx
-│   │   ├── 🔢 Pagination.tsx
-│   │   └── 🎬 VideoModal.tsx
+│   │   ├── 📄 AudioPlayerBar.tsx
+│   │   ├── 📄 AudioVisualizer.tsx
+│   │   ├── 📄 CustomSelect.tsx
+│   │   ├── 📄 FileCard.tsx
+│   │   ├── 📄 FileTableRow.tsx
+│   │   ├── 📄 FolderStatsHeader.tsx
+│   │   ├── 📄 FolderTree.tsx
+│   │   ├── 📄 LinkInputSection.tsx
+│   │   ├── 📄 Navbar.tsx
+│   │   ├── 📄 Pagination.tsx
+│   │   └── 📄 VideoModal.tsx
 │   ├── 📁 lib
-│   │   ├── ⚙️ formatters.ts
-│   │   ├── 📦 sampleData.ts
-│   │   └── 🛠️ teraboxParser.ts
+│   │   ├── 📄 dlinkCache.ts
+│   │   ├── 📄 formatters.ts
+│   │   ├── 📄 sampleData.ts
+│   │   └── 📄 teraboxParser.ts
 │   └── 📁 types
-│       └── 📐 terabox.ts
+│       └── 📄 terabox.ts
 ├── ⚙️ .gitignore
 ├── 📝 README.md
-├── ⚙️ next-env.d.ts
-├── ⚙️ next.config.mjs
-├── 📦 package-lock.json
-├── 📦 package.json
-├── 🎨 postcss.config.mjs
-├── 🎨 tailwind.config.ts
-├── ⚙️ tsconfig.json
-└── ⚙️ tsconfig.tsbuildinfo
+├── 📄 next.config.mjs
+├── ⚙️ package-lock.json
+├── ⚙️ package.json
+├── 📄 postcss.config.mjs
+├── 📄 tailwind.config.ts
+└── ⚙️ tsconfig.json
 ```
 
 ---
