@@ -15,6 +15,8 @@ import {
   CheckCircle2,
   Trash2,
   HelpCircle,
+  Youtube,
+  Zap,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -28,6 +30,8 @@ interface NavbarProps {
   onValidateCookie?: (cookie: string) => Promise<{ isValid: boolean; isExpired: boolean; message: string; status: string }>;
   isCookieModalOpen?: boolean;
   onToggleCookieModal?: (open: boolean) => void;
+  appMode?: "terabox" | "youtube";
+  onModeChange?: (mode: "terabox" | "youtube") => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -40,6 +44,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onValidateCookie,
   isCookieModalOpen,
   onToggleCookieModal,
+  appMode = "terabox",
+  onModeChange,
 }) => {
   const [internalModalOpen, setInternalModalOpen] = useState(false);
   const [cookieInput, setCookieInput] = useState(ndusCookie);
@@ -158,61 +164,84 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </div>
 
-          {/* Center / Status info */}
-          {currentFolder && (
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 shadow-sm">
-              <FolderSearch className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
-              <span className="text-slate-500 dark:text-slate-400">Folder:</span>
-              <span className="font-semibold text-slate-900 dark:text-white truncate max-w-[180px]">{currentFolder}</span>
-              {isAudioDetected && (
-                <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                  <Music2 className="w-3 h-3" /> Audio Active
-                </span>
-              )}
-            </div>
-          )}
+          {/* Mode Switcher */}
+          <div className="flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-inner">
+            <button
+              type="button"
+              suppressHydrationWarning
+              onClick={() => onModeChange?.("terabox")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                appMode === "terabox"
+                  ? "bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-sm border border-slate-200/80 dark:border-white/10"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
+              }`}
+              title="Beralih ke mode Inspeksi Folder TeraBox"
+            >
+              <FolderSearch className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">TeraBox Drive</span>
+              <span className="sm:hidden">TeraBox</span>
+            </button>
+
+            <button
+              type="button"
+              suppressHydrationWarning
+              onClick={() => onModeChange?.("youtube")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                appMode === "youtube"
+                  ? "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-md shadow-red-500/25"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
+              }`}
+              title="Beralih ke Full Mode YouTube (100% Bebas Iklan)"
+            >
+              <Youtube className={`w-3.5 h-3.5 ${appMode === "youtube" ? "text-white fill-current" : "text-red-500"}`} />
+              <span className="hidden sm:inline">YouTube (No Ads)</span>
+              <span className="sm:hidden">YouTube</span>
+            </button>
+          </div>
 
           {/* Action Tools */}
           <div className="flex items-center gap-2 sm:gap-2.5">
             {/* Theme Toggle (Light / Dark Mode Switcher) */}
             <ThemeToggle />
 
-            {/* TeraBox ndus Cookie Config */}
-            <button
-              type="button"
-              suppressHydrationWarning
-              onClick={() => setShowKeyModal(true)}
-              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all cursor-pointer shadow-sm ${
-                cookieStatus === "expired"
-                  ? "bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/40 hover:bg-rose-500/25"
-                  : ndusCookie || cookieStatus === "valid"
-                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20"
-                  : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700/60"
-              }`}
-              title="Konfigurasi Cookie ndus TeraBox untuk Live Direct Fetch"
-            >
-              <Key
-                className={`w-3.5 h-3.5 ${
+            {/* TeraBox ndus Cookie Config (Show in TeraBox mode or compact) */}
+            {appMode === "terabox" && (
+              <button
+                type="button"
+                suppressHydrationWarning
+                onClick={() => setShowKeyModal(true)}
+                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all cursor-pointer shadow-sm ${
                   cookieStatus === "expired"
-                    ? "text-rose-500 dark:text-rose-400 animate-pulse"
+                    ? "bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/40 hover:bg-rose-500/25"
                     : ndusCookie || cookieStatus === "valid"
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-amber-500 dark:text-amber-400"
+                    ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20"
+                    : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700/60"
                 }`}
-              />
-              <span className="hidden sm:inline">
-                {cookieStatus === "expired"
-                  ? "Cookie ndus Expired (Perbarui)"
-                  : cookieStatus === "valid"
-                  ? "Live API Connected (Valid)"
-                  : ndusCookie
-                  ? "Live API Connected"
-                  : "Set TeraBox Cookie (ndus)"}
-              </span>
-              <span className="sm:hidden">
-                {cookieStatus === "expired" ? "Expired" : ndusCookie ? "Connected" : "Cookie"}
-              </span>
-            </button>
+                title="Konfigurasi Cookie ndus TeraBox untuk Live Direct Fetch"
+              >
+                <Key
+                  className={`w-3.5 h-3.5 ${
+                    cookieStatus === "expired"
+                      ? "text-rose-500 dark:text-rose-400 animate-pulse"
+                      : ndusCookie || cookieStatus === "valid"
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-amber-500 dark:text-amber-400"
+                  }`}
+                />
+                <span className="hidden lg:inline">
+                  {cookieStatus === "expired"
+                    ? "Cookie ndus Expired (Perbarui)"
+                    : cookieStatus === "valid"
+                    ? "Live API Connected (Valid)"
+                    : ndusCookie
+                    ? "Live API Connected"
+                    : "Set Cookie ndus"}
+                </span>
+                <span className="lg:hidden">
+                  {cookieStatus === "expired" ? "Expired" : ndusCookie ? "Connected" : "Cookie"}
+                </span>
+              </button>
+            )}
           </div>
         </div>
       </header>

@@ -5,6 +5,19 @@ export interface YouTubeSearchResult {
   formattedDuration: string; // e.g. "03:45"
   thumbnailUrl: string;
   channel: string;
+  views?: string;
+  uploadedAt?: string;
+}
+
+/**
+ * Extracts a YouTube Video ID from any standard YouTube URL or returns null
+ */
+export function extractYouTubeVideoId(input: string): string | null {
+  if (!input) return null;
+  const clean = input.trim();
+  const regExp = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/|music\.youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/;
+  const match = clean.match(regExp);
+  return match ? match[1] : null;
 }
 
 /**
@@ -53,7 +66,7 @@ export function cleanSearchQuery(filename: string, artist?: string): string {
  */
 export function parseDurationToSeconds(durationStr?: string): number {
   if (!durationStr) return 0;
-  const clean = durationStr.replace(/\./g, ":");
+  const clean = durationStr.replace(/\./g, ":").trim();
   const parts = clean.split(":").map(Number);
   if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
     return parts[0] * 60 + parts[1];
@@ -64,11 +77,100 @@ export function parseDurationToSeconds(durationStr?: string): number {
 }
 
 /**
+ * Curated trending & popular songs for initial state in Full YouTube Mode
+ */
+export const POPULAR_YOUTUBE_TRACKS: YouTubeSearchResult[] = [
+  {
+    id: "kJQP7kiw5Fk",
+    title: "Luis Fonsi - Despacito ft. Daddy Yankee",
+    duration: 282,
+    formattedDuration: "04:42",
+    thumbnailUrl: "https://i.ytimg.com/vi/kJQP7kiw5Fk/hqdefault.jpg",
+    channel: "Luis Fonsi",
+  },
+  {
+    id: "JGwWNGJdvx8",
+    title: "Ed Sheeran - Shape of You (Official Music Video)",
+    duration: 263,
+    formattedDuration: "04:23",
+    thumbnailUrl: "https://i.ytimg.com/vi/JGwWNGJdvx8/hqdefault.jpg",
+    channel: "Ed Sheeran",
+  },
+  {
+    id: "fJ9rUzIMcZQ",
+    title: "Queen - Bohemian Rhapsody (Official Video Remastered)",
+    duration: 359,
+    formattedDuration: "05:59",
+    thumbnailUrl: "https://i.ytimg.com/vi/fJ9rUzIMcZQ/hqdefault.jpg",
+    channel: "Queen Official",
+  },
+  {
+    id: "jfKfPfyJRdk",
+    title: "lofi hip hop radio - beats to relax/study to",
+    duration: 0,
+    formattedDuration: "LIVE",
+    thumbnailUrl: "https://i.ytimg.com/vi/jfKfPfyJRdk/hqdefault.jpg",
+    channel: "Lofi Girl",
+  },
+  {
+    id: "OPf0YbXqDm0",
+    title: "Mark Ronson - Uptown Funk (Official Video) ft. Bruno Mars",
+    duration: 270,
+    formattedDuration: "04:30",
+    thumbnailUrl: "https://i.ytimg.com/vi/OPf0YbXqDm0/hqdefault.jpg",
+    channel: "Mark Ronson",
+  },
+  {
+    id: "RgKAFK5djSk",
+    title: "Wiz Khalifa - See You Again ft. Charlie Puth [Official Video]",
+    duration: 237,
+    formattedDuration: "03:57",
+    thumbnailUrl: "https://i.ytimg.com/vi/RgKAFK5djSk/hqdefault.jpg",
+    channel: "Wiz Khalifa",
+  },
+];
+
+/**
  * Searches YouTube without API keys using YouTube public scrape and fallback public instances.
  */
-export async function searchYouTube(query: string, limit = 5): Promise<YouTubeSearchResult[]> {
+export async function searchYouTube(query: string, limit = 20): Promise<YouTubeSearchResult[]> {
   const cleanQ = query.trim();
-  if (!cleanQ) return [];
+  if (!cleanQ) return POPULAR_YOUTUBE_TRACKS;
+
+  // If user pasted a direct YouTube link, resolve directly
+  const directId = extractYouTubeVideoId(cleanQ);
+  if (directId) {
+    try {
+      const oembedRes = await fetch(
+        `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${directId}&format=json`,
+        { signal: AbortSignal.timeout(4000) }
+      );
+      if (oembedRes.ok) {
+        const oembed = await oembedRes.json();
+        return [
+          {
+            id: directId,
+            title: oembed.title || "YouTube Track",
+            duration: 210,
+            formattedDuration: "03:30",
+            thumbnailUrl: oembed.thumbnail_url || `https://i.ytimg.com/vi/${directId}/hqdefault.jpg`,
+            channel: oembed.author_name || "YouTube Creator",
+          },
+        ];
+      }
+    } catch {
+      return [
+        {
+          id: directId,
+          title: "YouTube Video (" + directId + ")",
+          duration: 210,
+          formattedDuration: "03:30",
+          thumbnailUrl: `https://i.ytimg.com/vi/${directId}/hqdefault.jpg`,
+          channel: "YouTube",
+        },
+      ];
+    }
+  }
 
   // Primary: Direct YouTube Search scrape
   try {
@@ -76,11 +178,11 @@ export async function searchYouTube(query: string, limit = 5): Promise<YouTubeSe
     const res = await fetch(url, {
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
         "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
         "Cache-Control": "no-cache",
       },
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(6500),
     });
 
     if (res.ok) {
@@ -96,6 +198,7 @@ export async function searchYouTube(query: string, limit = 5): Promise<YouTubeSe
             ?.contents || [];
 
         const results: YouTubeSearchResult[] = [];
+        const seenIds = new Set<string>();
 
         for (const sec of sections) {
           const contents = sec?.itemSectionRenderer?.contents || [];
@@ -103,7 +206,8 @@ export async function searchYouTube(query: string, limit = 5): Promise<YouTubeSe
             if (item.videoRenderer) {
               const vr = item.videoRenderer;
               const id = vr.videoId;
-              if (!id) continue;
+              if (!id || seenIds.has(id)) continue;
+              seenIds.add(id);
 
               const title =
                 vr.title?.runs?.map((r: any) => r.text).join("") ||
@@ -118,6 +222,9 @@ export async function searchYouTube(query: string, limit = 5): Promise<YouTubeSe
                 vr.longBylineText?.runs?.map((r: any) => r.text).join("") ||
                 "YouTube Creator";
 
+              const views = vr.viewCountText?.simpleText || vr.shortViewCountText?.simpleText || "";
+              const uploadedAt = vr.publishedTimeText?.simpleText || "";
+
               const thumbs = vr.thumbnail?.thumbnails || [];
               const thumbnailUrl =
                 thumbs[thumbs.length - 1]?.url || `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
@@ -129,6 +236,8 @@ export async function searchYouTube(query: string, limit = 5): Promise<YouTubeSe
                 formattedDuration,
                 thumbnailUrl,
                 channel,
+                views,
+                uploadedAt,
               });
 
               if (results.length >= limit) break;
@@ -160,16 +269,20 @@ export async function searchYouTube(query: string, limit = 5): Promise<YouTubeSe
     try {
       const invRes = await fetch(ep, {
         headers: { "Accept": "application/json" },
-        signal: AbortSignal.timeout(3500),
+        signal: AbortSignal.timeout(4000),
       });
       if (invRes.ok) {
         const invData = await invRes.json();
         const items = Array.isArray(invData) ? invData : invData?.items || [];
         if (Array.isArray(items) && items.length > 0) {
           const fallbackResults: YouTubeSearchResult[] = [];
+          const seenIds = new Set<string>();
+
           for (const v of items) {
             const videoId = v.videoId || (v.url ? v.url.replace("/watch?v=", "") : "");
-            if (!videoId) continue;
+            if (!videoId || seenIds.has(videoId)) continue;
+            seenIds.add(videoId);
+
             const durationSec = v.lengthSeconds || v.duration || 200;
             const mins = Math.floor(durationSec / 60);
             const secs = durationSec % 60;
@@ -181,6 +294,7 @@ export async function searchYouTube(query: string, limit = 5): Promise<YouTubeSe
               formattedDuration: formatted,
               thumbnailUrl: v.videoThumbnails?.[0]?.url || v.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
               channel: v.author || v.uploaderName || "YouTube Artist",
+              views: v.viewCount ? `${(v.viewCount / 1000).toFixed(0)} rb x ditonton` : undefined,
             });
             if (fallbackResults.length >= limit) break;
           }

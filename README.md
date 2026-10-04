@@ -18,11 +18,13 @@ This application provides a seamless, dark-mode glassmorphic interface for disco
 ### 🚀 Core Objectives
 
 1. **Intelligent Cloud Folder & Link Inspection**: Instantly parse public TeraBox share links (`terabox.com/s/...`, `1024terabox.com`, etc.) and internal folder paths, extracting file trees, folder statistics, ownership details, and hierarchy.
-2. **Spotify-Grade Audio Deck & Real-Time Spectrum Visualizer**: Automatic detection of audio collections (`.mp3`, `.flac`, `.wav`, `.m4a`, `.aac`, `.ogg`) with continuous playback, interactive seekbars, playback modes (Repeat One, Repeat All, Shuffle, Order), speed control (0.75x - 2x), queue management, and dynamic Canvas-driven audio frequency spectrum visualizer.
-3. **Immersive Video Theatre Modal**: Streamlined video playback for `.mp4`, `.mkv`, `.webm`, and `.mov` files with custom cinema controls, direct streaming acceleration, and one-click download handlers.
-4. **Precision Storage Capacity Analysis**: Exact file size calculations formatted in MB and GB, aggregated folder metrics, and real-time category distribution breakdowns (Audio, Video, Images, Documents, Archives).
-5. **Dual-View Exploration & Live Search**: Smooth toggle between structured **Table List View** and responsive **Glassmorphic Card Grid View**, accompanied by real-time keyword search and category filtering.
-6. **Built-in Proxy Stream Engine**: Next.js server-side API proxy routes that bypass CORS restrictions, handle range headers for smooth scrubbing, and deliver optimized multimedia streaming pipelines.
+2. **⚡ Full YouTube Mode (100% Ad-Free)**: Switch to a dedicated YouTube Search & Streaming engine with trending tag presets, keyword/artist search, direct YouTube link pasting, and zero-ad playback for both audio and video.
+3. **Spotify-Grade Audio Deck & Real-Time Spectrum Visualizer**: Automatic detection of audio collections (`.mp3`, `.flac`, `.wav`, `.m4a`, `.aac`, `.ogg`) with continuous playback, interactive seekbars, playback modes (Repeat One, Repeat All, Shuffle, Order), speed control (0.75x - 2x), queue management, and dynamic Canvas-driven audio frequency spectrum visualizer.
+4. **Immersive Video Theatre Modal**: Streamlined video playback for `.mp4`, `.mkv`, `.webm`, and `.mov` files with custom cinema controls, direct streaming acceleration, and one-click download handlers.
+5. **Precision Storage Capacity Analysis**: Exact file size calculations formatted in MB and GB, aggregated folder metrics, and real-time category distribution breakdowns (Audio, Video, Images, Documents, Archives).
+6. **Dual-View Exploration & Live Search**: Smooth toggle between structured **Table List View** and responsive **Glassmorphic Card Grid View**, accompanied by real-time keyword search and category filtering.
+7. **🌗 Light & Dark Theme System**: 1-click theme switcher supporting Dark Mode, Light Mode, and System Default with high-contrast glassmorphism.
+8. **Built-in Proxy Stream Engine**: Next.js server-side API proxy routes that bypass CORS restrictions, handle range headers for smooth scrubbing, and deliver optimized multimedia streaming pipelines.
 
 ---
 
@@ -112,7 +114,10 @@ graph TD
 │   │   ├── 📄 Navbar.tsx
 │   │   ├── 📄 Pagination.tsx
 │   │   ├── 📄 ThemeToggle.tsx
-│   │   └── 📄 VideoModal.tsx
+│   │   ├── 📄 VideoModal.tsx
+│   │   ├── 📄 YouTubeCard.tsx
+│   │   ├── 📄 YouTubeSearchSection.tsx
+│   │   └── 📄 YouTubeTableRow.tsx
 │   ├── 📁 context
 │   │   └── 📄 ThemeContext.tsx
 │   ├── 📁 lib
