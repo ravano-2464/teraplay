@@ -331,6 +331,57 @@ export default function Home() {
     }
   };
 
+  // Direct Ad-Free YouTube Playback Handler
+  const handlePlayYouTube = async (file: TeraBoxFile) => {
+    setSelectedVideo(null);
+
+    if (folderData) {
+      const audioFiles = folderData.files.filter((f) => f.category === "audio" || f.extension === "mp4");
+      setPlaylist(audioFiles as AudioTrack[]);
+    }
+
+    // Set track immediately with YouTube fallback flag
+    const ytTrackInitial: AudioTrack = {
+      ...file,
+      sourceType: "youtube-fallback",
+      isYoutubeFallback: true,
+      youtubeId: file.youtubeId,
+      youtubeTitle: file.youtubeTitle || file.name,
+      youtubeChannel: file.youtubeChannel || file.artist || "Mencari di YouTube...",
+      youtubeThumbnail: file.youtubeThumbnail || file.thumbnailUrl,
+    };
+    setCurrentTrack(ytTrackInitial);
+    setIsPlaying(true);
+
+    try {
+      const res = await fetch(
+        `/api/youtube/search?filename=${encodeURIComponent(file.name)}&artist=${encodeURIComponent(
+          file.artist || ""
+        )}&best=true`
+      );
+      const data = await res.json();
+      if (data.success && data.track) {
+        const fullTrack: AudioTrack = {
+          ...file,
+          sourceType: "youtube-fallback",
+          isYoutubeFallback: true,
+          youtubeId: data.track.id,
+          youtubeTitle: data.track.title,
+          youtubeChannel: data.track.channel,
+          youtubeThumbnail: data.track.thumbnailUrl,
+          duration: data.track.duration || file.duration,
+          formattedDuration: data.track.formattedDuration || file.formattedDuration,
+        };
+        setCurrentTrack(fullTrack);
+        if (data.track.duration) {
+          handleUpdateFileDuration(file.id, data.track.duration);
+        }
+      }
+    } catch (e) {
+      console.warn("YouTube search error on direct click:", e);
+    }
+  };
+
   const handlePlayAllAudio = () => {
     if (!folderData) return;
     const audioFiles = folderData.files.filter((f) => f.category === "audio" || f.extension === "mp4");
@@ -463,11 +514,21 @@ export default function Home() {
           </div>
         )}
 
-        {/* Error Alert if any */}
+        {/* Error Alert with Auto-Fallback Notice */}
         {errorMessage && (
-          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
-            <p className="flex-1">{errorMessage}</p>
+          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs sm:text-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-rose-500/20 text-rose-400 shrink-0">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="font-bold text-white text-sm">Kendala API TeraBox</p>
+                <p className="text-rose-300 text-xs mt-0.5">{errorMessage}</p>
+                <p className="text-[11px] text-emerald-400 font-medium mt-1">
+                  ⚡ Fitur YouTube Auto-Fallback aktif: Lagu yang error akan otomatis dicari dan diputar dari YouTube secara 100% Bebas Iklan.
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -542,6 +603,7 @@ export default function Home() {
                               }
                               onPlayAudio={handlePlayAudio}
                               onOpenVideo={handleOpenVideo}
+                              onPlayYouTube={handlePlayYouTube}
                               onOpenFolder={handleOpenFolder}
                             />
                           ))}
@@ -561,6 +623,7 @@ export default function Home() {
                         }
                         onPlayAudio={handlePlayAudio}
                         onOpenVideo={handleOpenVideo}
+                        onPlayYouTube={handlePlayYouTube}
                         onOpenFolder={handleOpenFolder}
                       />
                     ))}

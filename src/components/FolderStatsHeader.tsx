@@ -110,7 +110,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
   const hasSearch = searchQuery.trim().length > 0;
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <>
       {/* Folder Information Card */}
       <div className="relative glass-card rounded-3xl p-5 sm:p-7 border border-white/10 overflow-hidden shadow-xl">
         {/* Background ambient light */}
@@ -258,8 +258,8 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
         )}
       </div>
 
-      {/* Prominent Search, Category Filters & Sort Controls Bar */}
-      <div className="glass-panel rounded-2xl p-4 border border-white/10 bg-slate-950/80 flex flex-col gap-3 shadow-lg relative z-30">
+      {/* Sticky Search, Category Filters & Sort Controls Bar */}
+      <div className="sticky top-16 z-30 glass-panel rounded-2xl p-3 sm:p-4 border border-white/10 bg-slate-950/90 backdrop-blur-2xl flex flex-col gap-3 shadow-[0_12px_36px_rgba(0,0,0,0.6)] transition-all duration-200 ring-1 ring-white/5">
         {/* Top Row: Search Input & Controls */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 relative z-40">
           {/* Main Search Input Box */}
@@ -400,6 +400,6 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };

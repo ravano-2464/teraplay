@@ -31,11 +31,23 @@ export const VideoModal: React.FC<VideoModalProps> = ({
   const [startPos, setStartPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isMaximized, setIsMaximized] = useState(false);
 
-  // Reset position when a new file is opened
+  const [ytFallbackTrack, setYtFallbackTrack] = useState<{ id: string; title: string; channel?: string } | null>(
+    file?.youtubeId ? { id: file.youtubeId, title: file.youtubeTitle || file.name, channel: file.youtubeChannel } : null
+  );
+  const [isSearchingFallback, setIsSearchingFallback] = useState(false);
+  const [fallbackNotice, setFallbackNotice] = useState<string | null>(null);
+
+  // Reset position & fallback when a new file is opened
   useEffect(() => {
     setPosition({ x: 0, y: 0 });
     setIsMaximized(false);
-  }, [file?.id]);
+    setFallbackNotice(null);
+    if (file?.youtubeId) {
+      setYtFallbackTrack({ id: file.youtubeId, title: file.youtubeTitle || file.name, channel: file.youtubeChannel });
+    } else {
+      setYtFallbackTrack(null);
+    }
+  }, [file?.id, file?.youtubeId]);
 
   const handleClose = () => {
     if (videoRef.current) {
@@ -46,6 +58,9 @@ export const VideoModal: React.FC<VideoModalProps> = ({
   };
 
   if (!file) return null;
+
+  const isYouTubeMode = Boolean(ytFallbackTrack?.id || file.youtubeId || file.isYoutubeFallback);
+  const activeYtId = ytFallbackTrack?.id || file.youtubeId;
 
   const displayDuration =
     file.formattedDuration ||
@@ -60,10 +75,47 @@ export const VideoModal: React.FC<VideoModalProps> = ({
     }
   };
 
+  // Automatically switch to ad-free YouTube when TeraBox stream fails
+  const triggerYouTubeFallback = async () => {
+    if (isSearchingFallback) return;
+    setIsSearchingFallback(true);
+    setFallbackNotice("Mencari video di YouTube (Bebas Iklan)...");
+
+    try {
+      const res = await fetch(
+        `/api/youtube/search?filename=${encodeURIComponent(file.name)}&artist=${encodeURIComponent(
+          file.artist || ""
+        )}&best=true`
+      );
+      const data = await res.json();
+      if (data.success && data.track?.id) {
+        setYtFallbackTrack({
+          id: data.track.id,
+          title: data.track.title,
+          channel: data.track.channel,
+        });
+        setFallbackNotice("⚡ Beralih otomatis ke YouTube Video (Bebas Iklan)");
+        if (data.track.duration) {
+          onDurationLoaded?.(file.id, data.track.duration);
+        }
+      } else {
+        setFallbackNotice("Video tidak ditemukan di YouTube.");
+      }
+    } catch {
+      setFallbackNotice("Gagal menghubungkan ke YouTube.");
+    } finally {
+      setIsSearchingFallback(false);
+    }
+  };
+
+  const handleVideoError = () => {
+    console.warn("TeraBox Video Stream failed in modal, triggering YouTube fallback...");
+    triggerYouTubeFallback();
+  };
+
   // Dragging handlers with PointerEvents
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (isMaximized) return;
-    // Don't drag if clicking buttons inside header
     if ((e.target as HTMLElement).closest("button, a, input")) return;
 
     setIsDragging(true);
@@ -120,11 +172,13 @@ export const VideoModal: React.FC<VideoModalProps> = ({
             : `translate3d(${position.x}px, ${position.y}px, 0)`,
           transition: isDragging ? "none" : "transform 0.15s ease-out",
         }}
-        className={`relative bg-slate-950/95 border border-cyan-500/40 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col ${
+        className={`relative bg-slate-950/95 border ${
+          isYouTubeMode ? "border-rose-500/40 shadow-[0_20px_60px_rgba(244,63,94,0.15)]" : "border-cyan-500/40 shadow-[0_20px_60px_rgba(0,0,0,0.8)]"
+        } rounded-2xl overflow-hidden flex flex-col ${
           isMaximized
             ? "w-full h-full max-w-none max-h-none rounded-none border-none"
             : "w-full max-w-4xl max-h-[92vh]"
-        } ${isDragging ? "shadow-cyan-500/20 border-cyan-400 ring-2 ring-cyan-500/30" : ""}`}
+        } ${isDragging ? "ring-2 ring-cyan-500/30" : ""}`}
       >
         {/* Draggable Modal Header */}
         <div
@@ -132,22 +186,31 @@ export const VideoModal: React.FC<VideoModalProps> = ({
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onDoubleClick={handleToggleMaximize}
-          className={`flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 border-b border-white/10 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 ${
-            isMaximized ? "cursor-default" : "cursor-grab active:cursor-grabbing"
-          }`}
+          className={`flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 border-b border-white/10 bg-gradient-to-r ${
+            isYouTubeMode ? "from-slate-950 via-rose-950/40 to-slate-950" : "from-slate-950 via-slate-900 to-slate-950"
+          } ${isMaximized ? "cursor-default" : "cursor-grab active:cursor-grabbing"}`}
           title={isMaximized ? undefined : "Tahan & drag header ini untuk menggeser jendela video"}
         >
           {/* Left Title & Drag Icon */}
           <div className="flex items-center gap-2.5 truncate min-w-0 pr-2 select-none">
-            <div className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 shrink-0">
+            <div className={`p-1.5 rounded-lg border shrink-0 ${
+              isYouTubeMode ? "bg-rose-500/20 text-rose-400 border-rose-500/30" : "bg-cyan-500/20 text-cyan-400 border-cyan-500/30"
+            }`}>
               <GripHorizontal className="w-4 h-4" />
             </div>
             <div className="truncate">
-              <h3 className="font-bold text-xs sm:text-sm text-white truncate flex items-center gap-1.5">
-                <span className="truncate">{file.name}</span>
+              <h3 className="font-bold text-xs sm:text-sm text-white truncate flex items-center gap-2">
+                <span className="truncate">{ytFallbackTrack?.title || file.name}</span>
+                {isYouTubeMode && (
+                  <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                    YouTube Bebas Iklan
+                  </span>
+                )}
               </h3>
               <p className="text-[11px] text-slate-400 flex items-center gap-2">
-                <span className="text-cyan-400 font-semibold">{file.formattedSize}</span>
+                <span className={isYouTubeMode ? "text-rose-400 font-semibold" : "text-cyan-400 font-semibold"}>
+                  {isYouTubeMode ? ytFallbackTrack?.channel || "YouTube Stream" : file.formattedSize}
+                </span>
                 {displayDuration && (
                   <>
                     <span>•</span>
@@ -161,6 +224,21 @@ export const VideoModal: React.FC<VideoModalProps> = ({
 
           {/* Right Action Controls */}
           <div className="flex items-center gap-1.5 shrink-0">
+            {/* Toggle YouTube Fallback button */}
+            {!isYouTubeMode && (
+              <button
+                onClick={triggerYouTubeFallback}
+                disabled={isSearchingFallback}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-semibold border border-rose-500/30 transition-all cursor-pointer"
+                title="Beralih ke pemutaran YouTube Bebas Iklan"
+              >
+                <Film className="w-3.5 h-3.5 text-rose-400" />
+                <span className="hidden sm:inline">
+                  {isSearchingFallback ? "Mencari..." : "Mode YouTube"}
+                </span>
+              </button>
+            )}
+
             {/* Reset Position (if dragged) */}
             {(position.x !== 0 || position.y !== 0) && !isMaximized && (
               <button
@@ -185,8 +263,8 @@ export const VideoModal: React.FC<VideoModalProps> = ({
               )}
             </button>
 
-            {/* Direct Download */}
-            {file.downloadUrl && (
+            {/* Direct Download / YouTube Link */}
+            {file.downloadUrl && !isYouTubeMode && (
               <a
                 href={file.downloadUrl}
                 download={file.name}
@@ -209,6 +287,24 @@ export const VideoModal: React.FC<VideoModalProps> = ({
           </div>
         </div>
 
+        {/* Notice Banner if Fallback is Active */}
+        {fallbackNotice && (
+          <div className="px-4 py-1.5 bg-rose-950/60 border-b border-rose-500/20 text-rose-300 text-xs flex items-center justify-between">
+            <span>{fallbackNotice}</span>
+            {isYouTubeMode && (
+              <button
+                onClick={() => {
+                  setYtFallbackTrack(null);
+                  setFallbackNotice(null);
+                }}
+                className="text-[11px] text-rose-400 hover:underline cursor-pointer"
+              >
+                Coba TeraBox Stream
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Video Player Box */}
         <div
           className={`relative flex-1 bg-black flex items-center justify-center ${
@@ -217,27 +313,46 @@ export const VideoModal: React.FC<VideoModalProps> = ({
               : "min-h-[260px] sm:min-h-[420px] max-h-[72vh]"
           }`}
         >
-          <video
-            ref={videoRef}
-            src={file.streamUrl || file.downloadUrl}
-            controls
-            autoPlay
-            playsInline
-            preload="metadata"
-            onLoadedMetadata={handleLoadedMetadata}
-            onDurationChange={handleLoadedMetadata}
-            className="w-full h-full object-contain"
-          >
-            Browser Anda tidak mendukung tag video HTML5.
-          </video>
+          {isYouTubeMode && activeYtId ? (
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${activeYtId}?autoplay=1&enablejsapi=1&origin=${encodeURIComponent(
+                typeof window !== "undefined" ? window.location.origin : ""
+              )}&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1`}
+              title={ytFallbackTrack?.title || file.name}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              className="w-full h-full border-0"
+            />
+          ) : (
+            <video
+              ref={videoRef}
+              src={file.streamUrl || file.downloadUrl}
+              controls
+              autoPlay
+              playsInline
+              preload="metadata"
+              onLoadedMetadata={handleLoadedMetadata}
+              onDurationChange={handleLoadedMetadata}
+              onError={handleVideoError}
+              className="w-full h-full object-contain"
+            >
+              Browser Anda tidak mendukung tag video HTML5.
+            </video>
+          )}
         </div>
 
         {/* Modal Footer info */}
         <div className="px-4 py-2 bg-slate-950/90 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-400 select-none">
           <span className="truncate max-w-[280px] sm:max-w-md">
-            Path: <code className="text-slate-300 font-mono">{file.path || `/${file.name}`}</code>
+            {isYouTubeMode ? (
+              <>Lagu YouTube: <span className="text-white font-medium">{ytFallbackTrack?.title || file.name}</span></>
+            ) : (
+              <>Path: <code className="text-slate-300 font-mono">{file.path || `/${file.name}`}</code></>
+            )}
           </span>
-          <span className="text-cyan-400/90 font-medium">TeraBox Video Stream Ready</span>
+          <span className={isYouTubeMode ? "text-rose-400 font-medium" : "text-cyan-400/90 font-medium"}>
+            {isYouTubeMode ? "⚡ 100% Ad-Free YouTube Playback" : "TeraBox Video Stream Ready"}
+          </span>
         </div>
       </div>
     </div>

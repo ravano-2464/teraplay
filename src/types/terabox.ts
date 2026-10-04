@@ -20,7 +20,12 @@ export interface TeraBoxFile {
   isDir: boolean;
   fsId?: string;
   path?: string;
-  sourceType?: 'terabox-live';
+  sourceType?: 'terabox-live' | 'youtube-fallback';
+  isYoutubeFallback?: boolean;
+  youtubeId?: string;
+  youtubeTitle?: string;
+  youtubeChannel?: string;
+  youtubeThumbnail?: string;
 }
 
 export interface FolderStats {

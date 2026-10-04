@@ -15,6 +15,7 @@ import {
   Check,
   Radio,
   Clock,
+  Youtube,
 } from "lucide-react";
 import { TeraBoxFile } from "@/types/terabox";
 import { CATEGORY_COLORS, formatDuration } from "@/lib/formatters";
@@ -25,6 +26,7 @@ interface FileTableRowProps {
   isCurrentlyPlayingAudio: boolean;
   onPlayAudio: (file: TeraBoxFile) => void;
   onOpenVideo: (file: TeraBoxFile) => void;
+  onPlayYouTube?: (file: TeraBoxFile) => void;
   onOpenFolder?: (path: string) => void;
 }
 
@@ -34,6 +36,7 @@ export const FileTableRow: React.FC<FileTableRowProps> = ({
   isCurrentlyPlayingAudio,
   onPlayAudio,
   onOpenVideo,
+  onPlayYouTube,
   onOpenFolder,
 }) => {
   const [copied, setCopied] = React.useState(false);
@@ -162,6 +165,27 @@ export const FileTableRow: React.FC<FileTableRowProps> = ({
       {/* Actions */}
       <td className="py-3.5 pr-4 pl-2 text-right whitespace-nowrap">
         <div className="flex items-center justify-end gap-1.5">
+          {(file.category === "audio" || file.category === "video" || file.extension === "mp4" || file.extension === "mp3") && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onPlayYouTube) {
+                  onPlayYouTube(file);
+                } else {
+                  onPlayAudio({
+                    ...file,
+                    isYoutubeFallback: true,
+                    sourceType: "youtube-fallback",
+                  });
+                }
+              }}
+              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/30 transition-all cursor-pointer"
+              title="Putar di YouTube (Bebas Iklan)"
+            >
+              <Youtube className="w-3.5 h-3.5" />
+            </button>
+          )}
+
           {(file.category === "video" || file.extension === "mp4") && (
             <button
               onClick={(e) => {

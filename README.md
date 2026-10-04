@@ -80,19 +80,21 @@ graph TD
 ## 🗂️ Project Structure
 
 ```text
-├── 📁 public
 ├── 📁 src
 │   ├── 📁 app
 │   │   ├── 📁 api
 │   │   │   ├── 📁 audio
 │   │   │   │   └── 📁 sample
 │   │   │   │       └── 📄 route.ts
-│   │   │   └── 📁 terabox
-│   │   │       ├── 📁 inspect
-│   │   │       │   └── 📄 route.ts
-│   │   │       ├── 📁 stream
-│   │   │       │   └── 📄 route.ts
-│   │   │       └── 📁 validate-cookie
+│   │   │   ├── 📁 terabox
+│   │   │   │   ├── 📁 inspect
+│   │   │   │   │   └── 📄 route.ts
+│   │   │   │   ├── 📁 stream
+│   │   │   │   │   └── 📄 route.ts
+│   │   │   │   └── 📁 validate-cookie
+│   │   │   │       └── 📄 route.ts
+│   │   │   └── 📁 youtube
+│   │   │       └── 📁 search
 │   │   │           └── 📄 route.ts
 │   │   ├── 🎨 globals.css
 │   │   ├── 🖼️ icon.svg
@@ -114,7 +116,8 @@ graph TD
 │   │   ├── 📄 dlinkCache.ts
 │   │   ├── 📄 formatters.ts
 │   │   ├── 📄 sampleData.ts
-│   │   └── 📄 teraboxParser.ts
+│   │   ├── 📄 teraboxParser.ts
+│   │   └── 📄 youtubeSearch.ts
 │   └── 📁 types
 │       └── 📄 terabox.ts
 ├── ⚙️ .gitignore
