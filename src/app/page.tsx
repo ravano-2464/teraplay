@@ -45,6 +45,9 @@ export default function Home() {
   const [currentTrack, setCurrentTrack] = useState<AudioTrack | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playlist, setPlaylist] = useState<AudioTrack[]>([]);
+  const [isShuffle, setIsShuffle] = useState(false);
+  const [repeatMode, setRepeatMode] = useState<"all" | "one" | "off">("all");
+  const [playbackHistory, setPlaybackHistory] = useState<string[]>([]);
 
   // Video Modal State
   const [selectedVideo, setSelectedVideo] = useState<TeraBoxFile | null>(null);
@@ -382,26 +385,92 @@ export default function Home() {
     }
   };
 
+  const handleToggleShuffle = () => {
+    setIsShuffle((prev) => !prev);
+  };
+
+  const handleToggleRepeat = () => {
+    setRepeatMode((prev) => (prev === "all" ? "one" : prev === "one" ? "off" : "all"));
+  };
+
   const handlePlayAllAudio = () => {
     if (!folderData) return;
     const audioFiles = folderData.files.filter((f) => f.category === "audio" || f.extension === "mp4");
     if (audioFiles.length > 0) {
       setPlaylist(audioFiles as AudioTrack[]);
+      setIsShuffle(false);
       setCurrentTrack(audioFiles[0] as AudioTrack);
+      setPlaybackHistory([audioFiles[0].id]);
+      setIsPlaying(true);
+    }
+  };
+
+  const handleShuffleAllAudio = () => {
+    if (!folderData) return;
+    const audioFiles = folderData.files.filter((f) => f.category === "audio" || f.extension === "mp4");
+    if (audioFiles.length > 0) {
+      setPlaylist(audioFiles as AudioTrack[]);
+      setIsShuffle(true);
+      const randomIdx = Math.floor(Math.random() * audioFiles.length);
+      const chosen = audioFiles[randomIdx] as AudioTrack;
+      setCurrentTrack(chosen);
+      setPlaybackHistory([chosen.id]);
       setIsPlaying(true);
     }
   };
 
   const handleNextTrack = () => {
     if (!currentTrack || playlist.length === 0) return;
-    const currentIndex = playlist.findIndex((t) => t.id === currentTrack.id);
-    const nextIndex = (currentIndex + 1) % playlist.length;
-    setCurrentTrack(playlist[nextIndex]);
-    setIsPlaying(true);
+
+    if (isShuffle) {
+      if (playlist.length === 1) {
+        setCurrentTrack(playlist[0]);
+        setIsPlaying(true);
+        return;
+      }
+
+      const otherTracks = playlist.filter((t) => t.id !== currentTrack.id);
+      const recentWindow = Math.min(playbackHistory.length, Math.max(1, Math.floor(playlist.length / 2)));
+      const recentIds = playbackHistory.slice(-recentWindow);
+      let candidatePool = otherTracks.filter((t) => !recentIds.includes(t.id));
+      if (candidatePool.length === 0) {
+        candidatePool = otherTracks;
+      }
+
+      const randomTrack = candidatePool[Math.floor(Math.random() * candidatePool.length)];
+      setPlaybackHistory((prev) => [...prev.slice(-50), currentTrack.id]);
+      setCurrentTrack(randomTrack);
+      setIsPlaying(true);
+    } else {
+      const currentIndex = playlist.findIndex((t) => t.id === currentTrack.id);
+      if (currentIndex === -1) {
+        setCurrentTrack(playlist[0]);
+        setIsPlaying(true);
+      } else if (repeatMode === "off" && currentIndex === playlist.length - 1) {
+        setIsPlaying(false);
+      } else {
+        const nextIndex = (currentIndex + 1) % playlist.length;
+        setPlaybackHistory((prev) => [...prev.slice(-50), currentTrack.id]);
+        setCurrentTrack(playlist[nextIndex]);
+        setIsPlaying(true);
+      }
+    }
   };
 
   const handlePrevTrack = () => {
     if (!currentTrack || playlist.length === 0) return;
+
+    if (isShuffle && playbackHistory.length > 0) {
+      const lastTrackId = playbackHistory[playbackHistory.length - 1];
+      const prevTrack = playlist.find((t) => t.id === lastTrackId);
+      setPlaybackHistory((prev) => prev.slice(0, -1));
+      if (prevTrack) {
+        setCurrentTrack(prevTrack);
+        setIsPlaying(true);
+        return;
+      }
+    }
+
     const currentIndex = playlist.findIndex((t) => t.id === currentTrack.id);
     const prevIndex = (currentIndex - 1 + playlist.length) % playlist.length;
     setCurrentTrack(playlist[prevIndex]);
@@ -560,6 +629,7 @@ export default function Home() {
               viewMode={viewMode}
               onToggleViewMode={setViewMode}
               onPlayAllAudio={handlePlayAllAudio}
+              onShuffleAllAudio={handleShuffleAllAudio}
               onOpenFolder={handleOpenFolder}
               sortBy={sortBy}
               onSortChange={handleSortChange}
@@ -686,6 +756,10 @@ export default function Home() {
           onTogglePlay={handleTogglePlay}
           onNextTrack={handleNextTrack}
           onPrevTrack={handlePrevTrack}
+          isShuffle={isShuffle}
+          onToggleShuffle={handleToggleShuffle}
+          repeatMode={repeatMode}
+          onToggleRepeat={handleToggleRepeat}
           onClosePlayer={() => {
             setIsPlaying(false);
             setCurrentTrack(null);

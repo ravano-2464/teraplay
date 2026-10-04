@@ -13,6 +13,7 @@ import {
   List,
   Search,
   PlayCircle,
+  Shuffle,
   Copy,
   Check,
   Sparkles,
@@ -33,6 +34,7 @@ interface FolderStatsHeaderProps {
   viewMode: "grid" | "table";
   onToggleViewMode: (mode: "grid" | "table") => void;
   onPlayAllAudio: () => void;
+  onShuffleAllAudio?: () => void;
   onOpenFolder?: (path: string) => void;
   sortBy?: string;
   onSortChange?: (sort: string) => void;
@@ -48,6 +50,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
   viewMode,
   onToggleViewMode,
   onPlayAllAudio,
+  onShuffleAllAudio,
   onOpenFolder,
   sortBy = "default",
   onSortChange,
@@ -276,13 +279,25 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
               </div>
             </div>
 
-            <button
-              onClick={onPlayAllAudio}
-              className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-extrabold text-xs shadow-md shadow-emerald-500/20 transition-all cursor-pointer self-start sm:self-auto shrink-0"
-            >
-              <PlayCircle className="w-4 h-4 fill-slate-950 text-emerald-400" />
-              <span>Putar Semua Track (Play All)</span>
-            </button>
+            <div className="flex items-center gap-2.5 flex-wrap self-start sm:self-auto shrink-0">
+              {onShuffleAllAudio && (
+                <button
+                  onClick={onShuffleAllAudio}
+                  className="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-teal-300 hover:text-teal-200 border border-teal-500/30 hover:border-teal-500/50 font-bold text-xs shadow-md transition-all cursor-pointer"
+                  title="Putar acak semua lagu di playlist"
+                >
+                  <Shuffle className="w-3.5 h-3.5" />
+                  <span>Putar Acak (Shuffle)</span>
+                </button>
+              )}
+              <button
+                onClick={onPlayAllAudio}
+                className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-extrabold text-xs shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
+              >
+                <PlayCircle className="w-4 h-4 fill-slate-950 text-emerald-400" />
+                <span>Putar Semua (Play All)</span>
+              </button>
+            </div>
           </div>
         )}
       </div>

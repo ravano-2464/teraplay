@@ -45,7 +45,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
     } else {
       setYtFallbackTrack(null);
     }
-  }, [file?.id, file?.youtubeId, file?.youtubeTitle, file?.youtubeChannel, file?.name]);
+  }, [file]);
 
   const handleClose = () => {
     if (videoRef.current) {

@@ -47,6 +47,10 @@ interface AudioPlayerBarProps {
   onClosePlayer?: () => void;
   onOpenCookieModal?: () => void;
   onDurationLoaded?: (trackId: string, duration: number) => void;
+  isShuffle?: boolean;
+  onToggleShuffle?: () => void;
+  repeatMode?: "all" | "one" | "off";
+  onToggleRepeat?: () => void;
 }
 
 export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
@@ -62,6 +66,10 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   onClosePlayer,
   onOpenCookieModal,
   onDurationLoaded,
+  isShuffle,
+  onToggleShuffle,
+  repeatMode,
+  onToggleRepeat,
 }) => {
   const mediaRef = useRef<HTMLVideoElement | null>(null);
   const ytIframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -71,7 +79,27 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.85);
   const [isMuted, setIsMuted] = useState(false);
-  const [playbackMode, setPlaybackMode] = useState<PlaybackMode>("repeat-all");
+  const [internalShuffle, setInternalShuffle] = useState(false);
+  const [internalRepeat, setInternalRepeat] = useState<"all" | "one" | "off">("all");
+
+  const activeShuffle = isShuffle !== undefined ? isShuffle : internalShuffle;
+  const activeRepeat = repeatMode !== undefined ? repeatMode : internalRepeat;
+
+  const handleShuffleToggle = () => {
+    if (onToggleShuffle) {
+      onToggleShuffle();
+    } else {
+      setInternalShuffle((prev) => !prev);
+    }
+  };
+
+  const handleRepeatToggle = () => {
+    if (onToggleRepeat) {
+      onToggleRepeat();
+    } else {
+      setInternalRepeat((prev) => (prev === "all" ? "one" : prev === "one" ? "off" : "all"));
+    }
+  };
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
@@ -385,6 +413,27 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
     sendYtCommand("setPlaybackRate", [playbackRate]);
   }, [playbackRate, isYouTubeMode, sendYtCommand]);
 
+  // Unified Media Ended handler
+  const handleEnded = useCallback(() => {
+    if (activeRepeat === "one") {
+      setCurrentTime(0);
+      if (isYouTubeMode) {
+        sendYtCommand("seekTo", [0, true]);
+        sendYtCommand("playVideo");
+      } else if (mediaRef.current) {
+        mediaRef.current.currentTime = 0;
+        safePlay();
+      }
+    } else {
+      onNextTrack();
+    }
+  }, [activeRepeat, isYouTubeMode, sendYtCommand, safePlay, onNextTrack]);
+
+  const handleEndedRef = useRef(handleEnded);
+  useEffect(() => {
+    handleEndedRef.current = handleEnded;
+  }, [handleEnded]);
+
   // YouTube IFrame Message Listener for time updates & state events
   useEffect(() => {
     if (!isYouTubeMode) return;
@@ -419,7 +468,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
           }
           if (info.playerState === 0) {
             // Ended
-            handleEnded();
+            handleEndedRef.current();
           } else if (info.playerState === 1) {
             // Playing
             setIsBuffering(false);
@@ -430,7 +479,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
           }
         } else if (msgData?.event === "onStateChange") {
           if (msgData.data === 0) {
-            handleEnded();
+            handleEndedRef.current();
           } else if (msgData.data === 1) {
             setIsBuffering(false);
             setHasError(false);
@@ -577,27 +626,6 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
     } else if (mediaRef.current) {
       mediaRef.current.currentTime = newTime;
     }
-  };
-
-  const handleEnded = () => {
-    if (playbackMode === "repeat-one") {
-      setCurrentTime(0);
-      if (isYouTubeMode) {
-        sendYtCommand("seekTo", [0, true]);
-        sendYtCommand("playVideo");
-      } else if (mediaRef.current) {
-        mediaRef.current.currentTime = 0;
-        safePlay();
-      }
-    } else {
-      onNextTrack();
-    }
-  };
-
-  const togglePlaybackMode = () => {
-    const modes: PlaybackMode[] = ["order", "repeat-all", "repeat-one", "shuffle"];
-    const nextIdx = (modes.indexOf(playbackMode) + 1) % modes.length;
-    setPlaybackMode(modes[nextIdx]);
   };
 
   const cycleSpeed = () => {
@@ -971,21 +999,26 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
               {/* Center Controls & Seekbar */}
               <div className="flex flex-col items-center flex-1 max-w-xl">
                 {/* Control Buttons */}
-                <div className="flex items-center gap-2 sm:gap-4 mb-1">
-                  {/* Playback Mode */}
+                <div className="flex items-center gap-1.5 sm:gap-3 mb-1">
+                  {/* Dedicated Shuffle Button */}
                   <button
-                    onClick={togglePlaybackMode}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all text-xs cursor-pointer"
-                    title={`Playback Mode: ${playbackMode}`}
+                    onClick={handleShuffleToggle}
+                    className={`relative p-2 rounded-xl transition-all cursor-pointer ${
+                      activeShuffle
+                        ? isYouTubeMode
+                          ? "bg-rose-500/20 text-rose-400 border border-rose-500/40 shadow-sm shadow-rose-500/20"
+                          : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm shadow-emerald-500/20"
+                        : "text-slate-400 hover:text-white hover:bg-slate-800/80"
+                    }`}
+                    title={activeShuffle ? "Acak Lagu (Shuffle): Aktif" : "Acak Lagu (Shuffle): Nonaktif"}
                   >
-                    {playbackMode === "repeat-one" ? (
-                      <Repeat1 className={`w-4 h-4 ${isYouTubeMode ? "text-rose-400" : "text-emerald-400"}`} />
-                    ) : playbackMode === "repeat-all" ? (
-                      <Repeat className={`w-4 h-4 ${isYouTubeMode ? "text-rose-400" : "text-emerald-400"}`} />
-                    ) : playbackMode === "shuffle" ? (
-                      <Shuffle className={`w-4 h-4 ${isYouTubeMode ? "text-rose-400" : "text-emerald-400"}`} />
-                    ) : (
-                      <Repeat className="w-4 h-4 text-slate-500" />
+                    <Shuffle className="w-4 h-4" />
+                    {activeShuffle && (
+                      <span
+                        className={`absolute top-1 right-1 w-1.5 h-1.5 rounded-full ${
+                          isYouTubeMode ? "bg-rose-400" : "bg-emerald-400"
+                        } animate-pulse`}
+                      />
                     )}
                   </button>
 
@@ -1021,9 +1054,36 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                   <button
                     onClick={onNextTrack}
                     className="p-1.5 sm:p-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 active:scale-95 transition-all cursor-pointer"
-                    title="Track Berikutnya"
+                    title={activeShuffle ? "Track Acak Berikutnya" : "Track Berikutnya"}
                   >
                     <SkipForward className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
+                  </button>
+
+                  {/* Dedicated Repeat Mode Button */}
+                  <button
+                    onClick={handleRepeatToggle}
+                    className={`p-2 rounded-xl transition-all cursor-pointer ${
+                      activeRepeat !== "off"
+                        ? isYouTubeMode
+                          ? "bg-rose-500/20 text-rose-400 border border-rose-500/40 shadow-sm shadow-rose-500/20"
+                          : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm shadow-emerald-500/20"
+                        : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/80"
+                    }`}
+                    title={
+                      activeRepeat === "one"
+                        ? "Ulangi 1 Lagu (Repeat One)"
+                        : activeRepeat === "all"
+                        ? "Ulangi Semua Lagu (Repeat All)"
+                        : "Putar Normal (No Repeat)"
+                    }
+                  >
+                    {activeRepeat === "one" ? (
+                      <Repeat1 className="w-4 h-4" />
+                    ) : activeRepeat === "all" ? (
+                      <Repeat className="w-4 h-4" />
+                    ) : (
+                      <Repeat className="w-4 h-4 text-slate-500" />
+                    )}
                   </button>
 
                   {/* Speed toggle */}
