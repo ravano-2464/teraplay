@@ -111,7 +111,10 @@ graph TD
 │   │   ├── 📄 LinkInputSection.tsx
 │   │   ├── 📄 Navbar.tsx
 │   │   ├── 📄 Pagination.tsx
+│   │   ├── 📄 ThemeToggle.tsx
 │   │   └── 📄 VideoModal.tsx
+│   ├── 📁 context
+│   │   └── 📄 ThemeContext.tsx
 │   ├── 📁 lib
 │   │   ├── 📄 dlinkCache.ts
 │   │   ├── 📄 formatters.ts

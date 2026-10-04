@@ -93,7 +93,6 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
     }));
 
     let startTime = performance.now();
-    let lastBeatCheck = 0;
 
     const render = (now: number) => {
       const elapsed = (now - startTime) / 1000;
@@ -259,7 +258,7 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
   }, [isPlaying, barCount, height, theme, showPeaks]);
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-xl bg-slate-900/90 px-2 py-1 border border-white/10 shadow-inner">
+    <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-xl bg-slate-100/90 dark:bg-slate-900/90 px-2 py-1 border border-slate-200/80 dark:border-white/10 shadow-inner">
       <canvas
         ref={canvasRef}
         className="w-full h-full block"

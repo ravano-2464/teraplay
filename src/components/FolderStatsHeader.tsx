@@ -94,11 +94,11 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
 
   const categories = [
     { id: "all", label: "Semua File", count: stats.totalFiles, icon: Folder },
-    { id: "audio", label: "Audio", count: stats.audioCount, icon: Music, color: "text-emerald-400" },
-    { id: "video", label: "Video", count: stats.videoCount, icon: Film, color: "text-cyan-400" },
-    { id: "image", label: "Gambar", count: stats.imageCount, icon: ImageIcon, color: "text-purple-400" },
-    { id: "document", label: "Dokumen", count: stats.docCount, icon: FileText, color: "text-amber-400" },
-    { id: "archive", label: "Arsip", count: stats.archiveCount, icon: Archive, color: "text-rose-400" },
+    { id: "audio", label: "Audio", count: stats.audioCount, icon: Music, color: "text-emerald-500 dark:text-emerald-400" },
+    { id: "video", label: "Video", count: stats.videoCount, icon: Film, color: "text-cyan-500 dark:text-cyan-400" },
+    { id: "image", label: "Gambar", count: stats.imageCount, icon: ImageIcon, color: "text-purple-500 dark:text-purple-400" },
+    { id: "document", label: "Dokumen", count: stats.docCount, icon: FileText, color: "text-amber-500 dark:text-amber-400" },
+    { id: "archive", label: "Arsip", count: stats.archiveCount, icon: Archive, color: "text-rose-500 dark:text-rose-400" },
   ];
 
   const quickTags = [
@@ -115,7 +115,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
   return (
     <>
       {/* Folder Information Card */}
-      <div className="relative glass-card rounded-3xl p-5 sm:p-7 border border-white/10 overflow-hidden shadow-xl">
+      <div className="relative glass-card rounded-3xl p-5 sm:p-7 border border-slate-200/80 dark:border-white/10 overflow-hidden shadow-lg shadow-slate-200/30 dark:shadow-xl bg-white/85 dark:bg-slate-900/60 transition-colors duration-200">
         {/* Background ambient light */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-sky-500/10 via-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
 
@@ -128,10 +128,10 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
 
             <div className="min-w-0">
               <div className="flex items-center gap-2.5 flex-wrap">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight truncate">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight truncate">
                   {folderData.folderName}
                 </h1>
-                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-sky-50 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-500/30">
                   {folderData.source === "direct-api"
                     ? "Live TeraBox API"
                     : "TeraBox Share"}
@@ -143,7 +143,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
                 {parentPath && onOpenFolder && (
                   <button
                     onClick={() => onOpenFolder(parentPath)}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-sky-500/20 text-slate-300 hover:text-sky-300 border border-slate-700 transition-all cursor-pointer font-semibold shadow-sm"
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-sky-50 dark:bg-slate-800 dark:hover:bg-sky-500/20 text-slate-700 hover:text-sky-700 dark:text-slate-300 dark:hover:text-sky-300 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer font-semibold shadow-sm"
                     title={`Kembali ke ${parentPath}`}
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
@@ -151,19 +151,19 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
                   </button>
                 )}
 
-                <div className="flex items-center gap-1.5 font-mono text-slate-400 bg-slate-900/90 px-3 py-1 rounded-xl border border-slate-800/80 shadow-inner flex-wrap">
+                <div className="flex items-center gap-1.5 font-mono text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-900/90 px-3 py-1 rounded-xl border border-slate-200 dark:border-slate-800/80 shadow-inner flex-wrap">
                   {pathSegments.map((segment, idx) => {
                     const isLast = idx === pathSegments.length - 1;
                     return (
                       <React.Fragment key={segment.path}>
-                        {idx > 0 && <span className="text-slate-600">/</span>}
+                        {idx > 0 && <span className="text-slate-400 dark:text-slate-600">/</span>}
                         {isLast ? (
-                          <span className="text-sky-300 font-bold">{segment.name}</span>
+                          <span className="text-sky-600 dark:text-sky-300 font-bold">{segment.name}</span>
                         ) : onOpenFolder ? (
                           <button
                             type="button"
                             onClick={() => onOpenFolder(segment.path)}
-                            className="text-slate-400 hover:text-sky-400 hover:underline cursor-pointer transition-colors"
+                            className="text-slate-600 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 hover:underline cursor-pointer transition-colors"
                           >
                             {segment.name}
                           </button>
@@ -177,7 +177,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
               </div>
 
               {folderData.ownerName && (
-                <div className="flex items-center gap-2 mt-2 text-xs text-slate-400">
+                <div className="flex items-center gap-2 mt-2 text-xs text-slate-500 dark:text-slate-400">
                   {folderData.ownerAvatar && (
                     <img
                       src={folderData.ownerAvatar}
@@ -185,7 +185,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
                       className="w-4 h-4 rounded-full object-cover"
                     />
                   )}
-                  <span>Pemilik: <span className="text-slate-200 font-medium">{folderData.ownerName}</span></span>
+                  <span>Pemilik: <span className="text-slate-800 dark:text-slate-200 font-medium">{folderData.ownerName}</span></span>
                 </div>
               )}
             </div>
@@ -194,17 +194,17 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
           {/* Quick Metrics & Total Size in MB */}
           <div className="flex items-center gap-3 self-stretch md:self-auto justify-between md:justify-end flex-wrap">
             {/* Total Size Metric Card */}
-            <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-md">
-              <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="p-2 rounded-xl bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                 <HardDrive className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">
                   {folderData.accountQuota && (folderData.folderPath === "/" || stats.totalFiles === 0)
                     ? `Storage Akun (${folderData.accountQuota.percentageUsed}% Terpakai)`
                     : "Total Kapasitas"}
                 </p>
-                <p className="text-base sm:text-lg font-black text-emerald-300 tracking-tight">
+                <p className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-300 tracking-tight">
                   {folderData.accountQuota && (folderData.folderPath === "/" || stats.totalFiles === 0)
                     ? folderData.accountQuota.formattedUsed
                     : stats.formattedTotalSize}
@@ -218,15 +218,15 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
             </div>
 
             {/* Total Files Metric */}
-            <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-md">
-              <div className="p-2 rounded-xl bg-sky-500/20 text-sky-400 border border-sky-500/30">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="p-2 rounded-xl bg-sky-500/15 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30">
                 <Folder className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">
                   {stats.totalFiles === 0 && stats.totalFolders > 0 ? "Struktur Folder" : "Jumlah File"}
                 </p>
-                <p className="text-base sm:text-lg font-black text-sky-300 tracking-tight">
+                <p className="text-base sm:text-lg font-black text-sky-600 dark:text-sky-300 tracking-tight">
                   {stats.totalFiles === 0 && stats.totalFolders > 0
                     ? `${stats.totalFolders} Subfolder`
                     : `${stats.totalFiles} File ${stats.totalFolders > 0 ? `(${stats.totalFolders} Subfolder)` : ""}`}
@@ -237,23 +237,23 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
             {/* Copy Link button */}
             <button
               onClick={handleCopyLink}
-              className="p-3 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition-all cursor-pointer shadow-md"
+              className="p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/90 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white border border-slate-200 dark:border-slate-800 transition-all cursor-pointer shadow-sm"
               title="Salin link TeraBox"
             >
-              {copied ? <Check className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5" />}
+              {copied ? <Check className="w-5 h-5 text-emerald-500 dark:text-emerald-400" /> : <Copy className="w-5 h-5" />}
             </button>
           </div>
         </div>
 
         {/* Root Drive Navigation Guide Banner when in Root */}
         {(folderData.folderPath === "/" || folderData.folderPath === "") && stats.totalFolders > 0 && stats.totalFiles === 0 && (
-          <div className="mt-4 p-3.5 rounded-2xl bg-gradient-to-r from-sky-950/60 via-slate-900/80 to-indigo-950/50 border border-sky-500/30 text-xs text-sky-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+          <div className="mt-4 p-3.5 rounded-2xl bg-gradient-to-r from-sky-50 via-slate-50 to-indigo-50 dark:from-sky-950/60 dark:via-slate-900/80 dark:to-indigo-950/50 border border-sky-200 dark:border-sky-500/30 text-xs text-sky-800 dark:text-sky-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-xl bg-sky-500/20 text-sky-400 border border-sky-500/30 shrink-0">
+              <div className="p-1.5 rounded-xl bg-sky-500/15 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shrink-0">
                 <Folder className="w-4 h-4" />
               </div>
-              <p className="text-slate-300 text-xs leading-relaxed">
-                <span className="font-bold text-white">Anda berada di Root Drive (/).</span> Seluruh data tersimpan di dalam <span className="text-sky-300 font-semibold">{stats.totalFolders} Subfolder</span> di bawah. Klik subfolder (seperti <span className="text-sky-300 font-mono font-semibold">RAVANO MUSIC</span>, <span className="text-sky-300 font-mono font-semibold">FILM</span>, dll.) untuk membuka daftar file dan memutar audio/video.
+              <p className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed">
+                <span className="font-bold text-slate-900 dark:text-white">Anda berada di Root Drive (/).</span> Seluruh data tersimpan di dalam <span className="text-sky-700 dark:text-sky-300 font-semibold">{stats.totalFolders} Subfolder</span> di bawah. Klik subfolder (seperti <span className="text-sky-700 dark:text-sky-300 font-mono font-semibold">RAVANO MUSIC</span>, <span className="text-sky-700 dark:text-sky-300 font-mono font-semibold">FILM</span>, dll.) untuk membuka daftar file dan memutar audio/video.
               </p>
             </div>
           </div>
@@ -261,19 +261,19 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
 
         {/* Audio Folder Detected Announcement Bar */}
         {stats.hasAudio && (
-          <div className="mt-5 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-teal-950/50 to-slate-950/80 border border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+          <div className="mt-5 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-slate-50 dark:from-emerald-950/70 dark:via-teal-950/50 dark:to-slate-950/80 border border-emerald-200 dark:border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
+              <div className="p-2 rounded-xl bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shrink-0">
                 <Sparkles className="w-5 h-5 animate-pulse" />
               </div>
               <div>
-                <p className="text-sm font-bold text-white flex items-center gap-2">
+                <p className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <span>Folder Koleksi Audio Terdeteksi!</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 font-bold">
                     {stats.audioCount} Track Musik
                   </span>
                 </p>
-                <p className="text-xs text-slate-300 mt-0.5">
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
                   Sistem otomatis menyiapkan pemutar musik dengan visualizer & playlist.
                 </p>
               </div>
@@ -283,7 +283,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
               {onShuffleAllAudio && (
                 <button
                   onClick={onShuffleAllAudio}
-                  className="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-teal-300 hover:text-teal-200 border border-teal-500/30 hover:border-teal-500/50 font-bold text-xs shadow-md transition-all cursor-pointer"
+                  className="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 dark:bg-slate-900/90 dark:hover:bg-slate-800 text-teal-700 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 border border-teal-300 dark:border-teal-500/30 hover:border-teal-500/50 font-bold text-xs shadow-sm transition-all cursor-pointer"
                   title="Putar acak semua lagu di playlist"
                 >
                   <Shuffle className="w-3.5 h-3.5" />
@@ -303,19 +303,19 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
       </div>
 
       {/* Sticky Search, Category Filters & Sort Controls Bar */}
-      <div className="sticky top-16 z-30 glass-panel rounded-2xl p-3 sm:p-4 border border-white/10 bg-slate-950/90 backdrop-blur-2xl flex flex-col gap-3 shadow-[0_12px_36px_rgba(0,0,0,0.6)] transition-all duration-200 ring-1 ring-white/5">
+      <div className="sticky top-16 z-30 glass-panel rounded-2xl p-3 sm:p-4 border border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl flex flex-col gap-3 shadow-lg shadow-slate-200/40 dark:shadow-[0_12px_36px_rgba(0,0,0,0.6)] transition-all duration-200 ring-1 ring-slate-900/5 dark:ring-white/5">
         {/* Top Row: Search Input & Controls */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 relative z-40">
           {/* Main Search Input Box */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-white z-10 pointer-events-none drop-shadow-sm" />
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white z-10 pointer-events-none drop-shadow-sm" />
             <input
               ref={searchInputRef}
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Cari lagu, nama file, artis, atau format..."
-              className="w-full pl-10 pr-24 py-2.5 text-sm rounded-xl glass-input bg-slate-900/90 border border-slate-700/80 text-white placeholder-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all shadow-inner"
+              className="w-full pl-10 pr-24 py-2.5 text-sm rounded-xl glass-input bg-slate-50/90 dark:bg-slate-900/90 border border-slate-300 dark:border-slate-700/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all shadow-inner"
             />
             <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
               {hasSearch && (
@@ -324,14 +324,14 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
                     onSearchChange("");
                     searchInputRef.current?.focus();
                   }}
-                  className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  className="p-1 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer"
                   title="Hapus pencarian"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               )}
               {filteredCount !== undefined && (
-                <span className="text-[11px] font-mono px-2 py-0.5 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-lg bg-sky-50 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-500/30">
                   {filteredCount} file
                 </span>
               )}
@@ -360,11 +360,13 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
             )}
 
             {/* View Mode Toggle */}
-            <div className="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800">
+            <div className="flex items-center bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
               <button
                 onClick={() => onToggleViewMode("table")}
                 className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                  viewMode === "table" ? "bg-slate-800 text-sky-400 shadow-sm" : "text-slate-500 hover:text-slate-300"
+                  viewMode === "table"
+                    ? "bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-sm"
+                    : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
                 }`}
                 title="Tampilan Tabel (Table View)"
               >
@@ -373,7 +375,9 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
               <button
                 onClick={() => onToggleViewMode("grid")}
                 className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                  viewMode === "grid" ? "bg-slate-800 text-sky-400 shadow-sm" : "text-slate-500 hover:text-slate-300"
+                  viewMode === "grid"
+                    ? "bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-sm"
+                    : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
                 }`}
                 title="Tampilan Grid (Grid View)"
               >
@@ -384,7 +388,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
         </div>
 
         {/* Bottom Row: Category Pills & Quick Filter Tags */}
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-2.5 pt-1 border-t border-white/5">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-2.5 pt-1 border-t border-slate-100 dark:border-white/5">
           {/* Category Filter Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 no-scrollbar w-full lg:w-auto">
             {categories.map((cat) => {
@@ -396,15 +400,17 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
                   onClick={() => onSelectCategory(cat.id)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border cursor-pointer ${
                     isSelected
-                      ? "bg-slate-100 text-slate-950 border-white shadow-md font-bold"
-                      : "bg-slate-900 text-slate-300 hover:text-white border-slate-700 hover:border-slate-600 hover:bg-slate-800"
+                      ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-950 border-slate-900 dark:border-white shadow-sm font-bold"
+                      : "bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isSelected ? "text-slate-950" : cat.color || "text-slate-400"}`} />
+                  <Icon className={`w-3.5 h-3.5 ${isSelected ? "text-white dark:text-slate-950" : cat.color || "text-slate-400"}`} />
                   <span>{cat.label}</span>
                   <span
                     className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                      isSelected ? "bg-slate-900 text-white" : "bg-slate-800 text-slate-300"
+                      isSelected
+                        ? "bg-slate-800 dark:bg-slate-900 text-white"
+                        : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
                     }`}
                   >
                     {cat.count}
@@ -416,7 +422,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
 
           {/* Quick Search Tag Suggestions */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 no-scrollbar text-xs">
-            <span className="text-slate-500 text-[11px] flex items-center gap-1 shrink-0">
+            <span className="text-slate-400 dark:text-slate-500 text-[11px] flex items-center gap-1 shrink-0">
               <Tag className="w-3 h-3" /> Tag:
             </span>
             {quickTags.map((tag) => {
@@ -433,8 +439,8 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
                   }}
                   className={`px-2 py-0.5 rounded-lg text-[11px] font-mono border transition-colors cursor-pointer whitespace-nowrap ${
                     isActive
-                      ? "bg-sky-500/25 text-sky-200 border-sky-500/50 font-bold"
-                      : "bg-slate-900 text-slate-300 hover:text-white border-slate-700 hover:border-slate-600 hover:bg-slate-800"
+                      ? "bg-sky-50 dark:bg-sky-500/25 text-sky-700 dark:text-sky-200 border-sky-300 dark:border-sky-500/50 font-bold"
+                      : "bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
                 >
                   #{tag}

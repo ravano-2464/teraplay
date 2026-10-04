@@ -82,23 +82,23 @@ export const Pagination: React.FC<PaginationProps> = ({
 
   return (
     <div
-      className={`glass-panel rounded-2xl p-4 border border-white/10 bg-slate-950/70 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl text-xs select-none relative z-20 ${className}`}
+      className={`glass-panel rounded-2xl p-4 border border-slate-200/80 dark:border-white/10 bg-white/85 dark:bg-slate-950/70 flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg shadow-slate-200/30 dark:shadow-xl text-xs select-none relative z-20 transition-colors duration-200 ${className}`}
     >
       {/* Left: Summary Info & Items Per Page Selector */}
-      <div className="flex items-center gap-4 flex-wrap justify-center md:justify-start text-slate-400">
+      <div className="flex items-center gap-4 flex-wrap justify-center md:justify-start text-slate-600 dark:text-slate-400">
         <div>
           Menampilkan{" "}
-          <span className="font-bold text-white">
+          <span className="font-bold text-slate-900 dark:text-white">
             {isAll ? `1 - ${totalItems}` : `${startItem} - ${endItem}`}
           </span>{" "}
-          dari <span className="font-bold text-sky-400">{totalItems}</span> file
+          dari <span className="font-bold text-sky-600 dark:text-sky-400">{totalItems}</span> file
         </div>
 
-        <div className="h-4 w-px bg-white/10 hidden sm:block" />
+        <div className="h-4 w-px bg-slate-200 dark:bg-white/10 hidden sm:block" />
 
         {/* Page size dropdown */}
         <div className="flex items-center gap-2">
-          <span className="text-slate-400 hidden sm:inline">Per halaman:</span>
+          <span className="text-slate-500 dark:text-slate-400 hidden sm:inline">Per halaman:</span>
           <CustomSelect
             value={isAll ? 99999 : itemsPerPage}
             onChange={(val) => {
@@ -126,7 +126,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
-          className="p-1.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
+          className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
           title="Halaman Pertama"
         >
           <ChevronsLeft className="w-4 h-4" />
@@ -136,7 +136,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
-          className="p-1.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
+          className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
           title="Halaman Sebelumnya"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -149,7 +149,7 @@ export const Pagination: React.FC<PaginationProps> = ({
               return (
                 <span
                   key={`ellipsis-${idx}`}
-                  className="px-2 py-1 text-slate-500 font-mono"
+                  className="px-2 py-1 text-slate-400 dark:text-slate-500 font-mono"
                 >
                   ...
                 </span>
@@ -164,7 +164,7 @@ export const Pagination: React.FC<PaginationProps> = ({
                 className={`min-w-[32px] h-8 px-2 rounded-xl font-bold font-mono transition-all cursor-pointer text-xs ${
                   isCurrent
                     ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/30 border border-sky-400/50"
-                    : "bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700"
+                    : "bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-sm"
                 }`}
               >
                 {p}
@@ -177,7 +177,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages || totalPages === 0}
-          className="p-1.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
+          className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
           title="Halaman Berikutnya"
         >
           <ChevronRight className="w-4 h-4" />
@@ -187,7 +187,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages || totalPages === 0}
-          className="p-1.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
+          className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
           title="Halaman Terakhir"
         >
           <ChevronsRight className="w-4 h-4" />
@@ -197,7 +197,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         {totalPages > 4 && (
           <form
             onSubmit={handleJumpSubmit}
-            className="flex items-center gap-1.5 ml-1 pl-2 border-l border-white/10"
+            className="flex items-center gap-1.5 ml-1 pl-2 border-l border-slate-200 dark:border-white/10"
           >
             <span className="text-slate-500 hidden sm:inline">Ke hal:</span>
             <input
@@ -207,11 +207,11 @@ export const Pagination: React.FC<PaginationProps> = ({
               value={jumpPage}
               onChange={(e) => setJumpPage(e.target.value)}
               placeholder={`${currentPage}`}
-              className="w-12 px-2 py-1 text-center bg-slate-900 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-sky-500 text-xs font-mono"
+              className="w-12 px-2 py-1 text-center bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl text-slate-800 dark:text-slate-200 focus:outline-none focus:border-sky-500 text-xs font-mono"
             />
             <button
               type="submit"
-              className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-[11px] font-semibold transition-colors cursor-pointer"
+              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white rounded-xl text-[11px] font-semibold transition-colors cursor-pointer border border-slate-200 dark:border-transparent"
             >
               Go
             </button>

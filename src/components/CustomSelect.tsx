@@ -75,7 +75,7 @@ export function CustomSelect<T extends string | number>({
       ref={containerRef}
       className={`relative inline-block text-left ${isOpen ? "z-[60]" : "z-10"} ${className}`}
     >
-      {/* Trigger Button (Solid high-contrast opaque styling) */}
+      {/* Trigger Button (Solid high-contrast styling in both light and dark mode) */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -83,13 +83,13 @@ export function CustomSelect<T extends string | number>({
           size === "sm" ? "px-3 py-1.5 text-xs" : "px-3.5 py-2 text-xs sm:text-sm"
         } ${
           isOpen
-            ? "bg-slate-900 border-sky-500 text-white shadow-lg shadow-sky-500/20 ring-2 ring-sky-500/30"
-            : "bg-slate-900 hover:bg-slate-800 border-slate-700 hover:border-slate-600 text-white shadow-sm"
+            ? "bg-white dark:bg-slate-900 border-sky-500 text-slate-900 dark:text-white shadow-lg shadow-sky-500/20 ring-2 ring-sky-500/30"
+            : "bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-600 text-slate-800 dark:text-white shadow-sm"
         }`}
       >
         <div className="flex items-center gap-2 truncate">
           {icon && (
-            <span className={`shrink-0 transition-colors duration-200 ${isOpen ? "text-sky-400" : "text-slate-400 group-hover:text-slate-200"}`}>
+            <span className={`shrink-0 transition-colors duration-200 ${isOpen ? "text-sky-500 dark:text-sky-400" : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200"}`}>
               {icon}
             </span>
           )}
@@ -102,20 +102,20 @@ export function CustomSelect<T extends string | number>({
         <div className="shrink-0 flex items-center pl-1">
           <ChevronDown
             className={`w-3.5 h-3.5 transition-transform duration-300 ease-out ${
-              isOpen ? "rotate-180 text-sky-400" : "rotate-0 text-slate-400 group-hover:text-slate-200"
+              isOpen ? "rotate-180 text-sky-500 dark:text-sky-400" : "rotate-0 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200"
             }`}
           />
         </div>
       </button>
 
-      {/* Dropdown Menu Popup (100% Solid opaque dark slate, no transparency) */}
+      {/* Dropdown Menu Popup (Opaque background in both modes) */}
       {isOpen && (
         <div
           className={`absolute z-[70] ${
             dropUp ? "bottom-full mb-2" : "top-full mt-2"
           } ${
             align === "right" ? "right-0" : "left-0"
-          } ${minWidth} rounded-2xl bg-slate-900 border border-slate-700 shadow-[0_20px_50px_rgba(0,0,0,0.95)] p-1.5 space-y-1 animate-in ring-1 ring-white/10 ${
+          } ${minWidth} rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.95)] p-1.5 space-y-1 animate-in ring-1 ring-slate-900/5 dark:ring-white/10 ${
             dropUp ? "slide-in-from-bottom-2" : "slide-in-from-top-2"
           } fade-in zoom-in-95 duration-200`}
         >
@@ -128,13 +128,13 @@ export function CustomSelect<T extends string | number>({
                 onClick={() => handleSelect(option.value)}
                 className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer ${
                   isSelected
-                    ? "bg-sky-500/25 text-sky-200 border border-sky-500/50 shadow-sm font-bold"
-                    : "text-slate-200 hover:text-white bg-slate-900 hover:bg-slate-800 border border-transparent"
+                    ? "bg-sky-50 dark:bg-sky-500/25 text-sky-700 dark:text-sky-200 border border-sky-200 dark:border-sky-500/50 shadow-sm font-bold"
+                    : "text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent"
                 }`}
               >
                 <div className="flex items-center gap-2 truncate">
                   {option.icon && (
-                    <span className={`shrink-0 ${isSelected ? "text-sky-400" : "text-slate-400"}`}>
+                    <span className={`shrink-0 ${isSelected ? "text-sky-500 dark:text-sky-400" : "text-slate-400"}`}>
                       {option.icon}
                     </span>
                   )}
@@ -143,11 +143,11 @@ export function CustomSelect<T extends string | number>({
 
                 <div className="flex items-center gap-1.5 shrink-0">
                   {option.badge !== undefined && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-white/10">
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10">
                       {option.badge}
                     </span>
                   )}
-                  {isSelected && <Check className="w-3.5 h-3.5 text-sky-400 shrink-0 animate-in zoom-in duration-150" />}
+                  {isSelected && <Check className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400 shrink-0 animate-in zoom-in duration-150" />}
                 </div>
               </button>
             );

@@ -66,14 +66,14 @@ export const FileCard: React.FC<FileCardProps> = ({
   return (
     <div
       onClick={handleCardClick}
-      className={`group relative rounded-2xl glass-card p-4 flex flex-col justify-between cursor-pointer border transition-all ${
+      className={`group relative rounded-2xl glass-card p-4 flex flex-col justify-between cursor-pointer border transition-all duration-200 ${
         isCurrentlyPlayingAudio
-          ? "border-emerald-500 bg-emerald-950/20 shadow-lg shadow-emerald-500/10"
-          : "border-white/5 hover:border-slate-700"
+          ? "border-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/20 shadow-lg shadow-emerald-500/10 ring-2 ring-emerald-500/30"
+          : "border-slate-200/80 dark:border-white/5 bg-white/80 dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700 shadow-sm hover:shadow-md"
       }`}
     >
       {/* Top Media Preview / Icon */}
-      <div className="relative w-full aspect-video rounded-xl bg-slate-900 overflow-hidden mb-3.5 border border-white/5 flex items-center justify-center">
+      <div className="relative w-full aspect-video rounded-xl bg-slate-100 dark:bg-slate-900 overflow-hidden mb-3.5 border border-slate-200/60 dark:border-white/5 flex items-center justify-center">
         {file.thumbnailUrl ? (
           <img
             src={file.thumbnailUrl}
@@ -94,68 +94,68 @@ export const FileCard: React.FC<FileCardProps> = ({
         {/* Play overlay for audio/video */}
         {(file.category === "audio" || file.category === "video") && (
           <div
-            className={`absolute inset-0 bg-slate-950/60 backdrop-blur-[2px] flex items-center justify-center transition-opacity ${
+            className={`absolute inset-0 bg-slate-950/60 backdrop-blur-[2px] flex items-center justify-center transition-opacity duration-200 ${
               isCurrentlyPlayingAudio ? "opacity-100" : "opacity-0 group-hover:opacity-100"
             }`}
           >
-            <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-sky-400 to-emerald-400 text-slate-950 flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform">
+            <div
+              className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                isCurrentlyPlayingAudio
+                  ? "bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/40"
+                  : "bg-white/90 text-slate-950 hover:scale-110 shadow-lg"
+              } transition-transform`}
+            >
               {isCurrentlyPlayingAudio ? (
-                <Pause className="w-5 h-5 fill-current" />
+                <Radio className="w-6 h-6 animate-pulse" />
               ) : (
-                <Play className="w-5 h-5 fill-current ml-0.5" />
+                <Play className="w-6 h-6 fill-current ml-0.5" />
               )}
             </div>
           </div>
         )}
 
-        {/* Extension Pill */}
-        <span
-          className={`absolute top-2 left-2 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md border backdrop-blur-md ${styling.badge}`}
-        >
-          {file.extension}
-        </span>
+        {/* Duration badge overlay */}
+        {displayDuration && displayDuration !== "--:--" && (
+          <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-slate-950/80 backdrop-blur-sm text-[10px] font-mono font-medium text-slate-200 border border-white/10 flex items-center gap-1">
+            <Clock className="w-2.5 h-2.5 text-slate-400" />
+            <span>{displayDuration}</span>
+          </div>
+        )}
 
-        {/* Size Badge */}
-        <span className="absolute bottom-2 right-2 text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-slate-950/80 text-white border border-white/10 backdrop-blur-md">
-          {file.formattedSize}
-        </span>
+        {/* Category tag in preview */}
+        <div className="absolute top-2 left-2">
+          <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md backdrop-blur-md border ${styling.badge}`}>
+            {file.extension || file.category}
+          </span>
+        </div>
       </div>
 
-      {/* File Details */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-1 mb-1">
-          <h4 className="font-bold text-xs sm:text-sm text-slate-100 group-hover:text-sky-300 transition-colors line-clamp-2 leading-snug">
-            {file.name}
-          </h4>
-        </div>
-
+      {/* Center Details */}
+      <div className="mb-3">
+        <h3
+          className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-sky-600 dark:group-hover:text-sky-300 transition-colors line-clamp-2 leading-snug"
+          title={file.name}
+        >
+          {file.name}
+        </h3>
         {file.artist && (
-          <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 truncate">
             {file.artist} {file.album ? `• ${file.album}` : ""}
           </p>
         )}
-
-        {file.bitrate && (
-          <p className="text-[10px] text-emerald-400 font-mono mt-0.5">
-            {file.bitrate}
-          </p>
-        )}
       </div>
 
-      {/* Action Footer */}
-      <div className="mt-3.5 pt-2.5 border-t border-white/5 flex items-center justify-between text-xs text-slate-400">
-        <span className="text-[11px] font-mono text-slate-400 inline-flex items-center gap-1">
-          {displayDuration ? (
-            <>
-              <Clock className="w-3 h-3 text-slate-500" />
-              <span>{displayDuration}</span>
-            </>
-          ) : (
-            <span className="text-slate-500">File</span>
-          )}
-        </span>
-
+      {/* Bottom Info & Action Bar */}
+      <div className="pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between gap-2">
+        {/* File Size in MB (Key requirement) */}
         <div className="flex items-center gap-1.5">
+          <span className="font-mono font-bold text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-200 dark:border-emerald-500/20">
+            {file.formattedSize}
+          </span>
+        </div>
+
+        {/* Action icons */}
+        <div className="flex items-center gap-1">
           {(file.category === "audio" || file.category === "video" || file.extension === "mp4" || file.extension === "mp3") && (
             <button
               onClick={(e) => {
@@ -170,7 +170,7 @@ export const FileCard: React.FC<FileCardProps> = ({
                   });
                 }
               }}
-              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/30 transition-all cursor-pointer"
+              className="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 transition-all cursor-pointer"
               title="Putar di YouTube (Bebas Iklan)"
             >
               <Youtube className="w-3.5 h-3.5" />
@@ -183,7 +183,7 @@ export const FileCard: React.FC<FileCardProps> = ({
                 e.stopPropagation();
                 onOpenVideo(file);
               }}
-              className="p-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition-all cursor-pointer"
+              className="p-1.5 rounded-lg bg-cyan-50 dark:bg-cyan-500/10 hover:bg-cyan-100 dark:hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-500/30 transition-all cursor-pointer"
               title="Tonton Video"
             >
               <Film className="w-3.5 h-3.5" />
@@ -192,10 +192,10 @@ export const FileCard: React.FC<FileCardProps> = ({
 
           <button
             onClick={handleCopy}
-            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-all cursor-pointer"
-            title="Salin direct link"
+            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white transition-all cursor-pointer"
+            title="Salin link direct"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
 
           {file.downloadUrl && (
@@ -203,8 +203,8 @@ export const FileCard: React.FC<FileCardProps> = ({
               href={file.downloadUrl}
               download={file.name}
               onClick={(e) => e.stopPropagation()}
-              className="p-1.5 rounded-lg bg-slate-800 hover:bg-sky-500 hover:text-slate-950 text-slate-300 transition-all font-semibold cursor-pointer"
-              title={`Download (${file.formattedSize})`}
+              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-sky-500 hover:text-slate-950 text-slate-600 dark:text-slate-300 transition-all cursor-pointer"
+              title={`Download ${file.name}`}
             >
               <Download className="w-3.5 h-3.5" />
             </a>

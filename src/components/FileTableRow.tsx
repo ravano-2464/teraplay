@@ -67,10 +67,10 @@ export const FileTableRow: React.FC<FileTableRowProps> = ({
   return (
     <tr
       onClick={handleRowClick}
-      className={`group border-b border-white/5 transition-all cursor-pointer ${
+      className={`group border-b border-slate-100 dark:border-white/5 transition-all cursor-pointer ${
         isCurrentlyPlayingAudio
-          ? "bg-emerald-500/15 text-white"
-          : "hover:bg-slate-900/80 text-slate-300"
+          ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-950 dark:text-white"
+          : "hover:bg-slate-50 dark:hover:bg-slate-900/80 text-slate-700 dark:text-slate-300"
       }`}
     >
       {/* Index / Play action */}
@@ -84,7 +84,7 @@ export const FileTableRow: React.FC<FileTableRowProps> = ({
             className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
               isCurrentlyPlayingAudio
                 ? "bg-emerald-500 text-slate-950 font-bold"
-                : "text-slate-400 group-hover:bg-slate-800 group-hover:text-white"
+                : "text-slate-400 group-hover:bg-slate-200 dark:group-hover:bg-slate-800 group-hover:text-slate-900 dark:group-hover:text-white"
             }`}
           >
             {isCurrentlyPlayingAudio ? (
@@ -95,7 +95,7 @@ export const FileTableRow: React.FC<FileTableRowProps> = ({
             <Play className="w-3.5 h-3.5 fill-current hidden group-hover:block ml-0.5" />
           </button>
         ) : (
-          <span className="font-mono text-xs text-slate-500">{index + 1}</span>
+          <span className="font-mono text-xs text-slate-400 dark:text-slate-500">{index + 1}</span>
         )}
       </td>
 
@@ -106,7 +106,7 @@ export const FileTableRow: React.FC<FileTableRowProps> = ({
             <img
               src={file.thumbnailUrl}
               alt=""
-              className="w-9 h-9 rounded-lg object-cover shrink-0 border border-white/10"
+              className="w-9 h-9 rounded-lg object-cover shrink-0 border border-slate-200 dark:border-white/10"
             />
           ) : (
             <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${styling.bg} ${styling.text} border ${styling.border}`}>
@@ -121,16 +121,16 @@ export const FileTableRow: React.FC<FileTableRowProps> = ({
 
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <p className="font-semibold text-xs sm:text-sm text-slate-100 group-hover:text-sky-300 transition-colors truncate">
+              <p className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-slate-100 group-hover:text-sky-600 dark:group-hover:text-sky-300 transition-colors truncate">
                 {file.name}
               </p>
             </div>
-            <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400 truncate">
+            <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 truncate">
               {file.artist && (
                 <span className="truncate">{file.artist} {file.album ? `• ${file.album}` : ""}</span>
               )}
               {(file.category === "audio" || file.category === "video") && displayDuration !== "-" && (
-                <span className="md:hidden inline-flex items-center gap-1 font-mono text-[10px] text-emerald-400/90 font-medium">
+                <span className="md:hidden inline-flex items-center gap-1 font-mono text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
                   <Clock className="w-2.5 h-2.5" />
                   {displayDuration}
                 </span>
@@ -149,14 +149,14 @@ export const FileTableRow: React.FC<FileTableRowProps> = ({
 
       {/* File Size in MB (Key requirement) */}
       <td className="py-3.5 px-3 whitespace-nowrap">
-        <span className="font-mono font-bold text-xs text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20">
+        <span className="font-mono font-bold text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-200 dark:border-emerald-500/20">
           {file.formattedSize}
         </span>
       </td>
 
       {/* Duration */}
-      <td className="py-3.5 px-3 font-mono text-xs text-slate-400 hidden md:table-cell whitespace-nowrap">
-        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-900/90 border border-white/5 text-slate-300">
+      <td className="py-3.5 px-3 font-mono text-xs text-slate-500 dark:text-slate-400 hidden md:table-cell whitespace-nowrap">
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-white/5 text-slate-700 dark:text-slate-300">
           <Clock className="w-3 h-3 text-slate-400" />
           {displayDuration}
         </span>
@@ -179,7 +179,7 @@ export const FileTableRow: React.FC<FileTableRowProps> = ({
                   });
                 }
               }}
-              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/30 transition-all cursor-pointer"
+              className="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 transition-all cursor-pointer"
               title="Putar di YouTube (Bebas Iklan)"
             >
               <Youtube className="w-3.5 h-3.5" />
@@ -192,7 +192,7 @@ export const FileTableRow: React.FC<FileTableRowProps> = ({
                 e.stopPropagation();
                 onOpenVideo(file);
               }}
-              className="p-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition-all cursor-pointer"
+              className="p-1.5 rounded-lg bg-cyan-50 dark:bg-cyan-500/10 hover:bg-cyan-100 dark:hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-500/30 transition-all cursor-pointer"
               title="Tonton Video"
             >
               <Film className="w-3.5 h-3.5" />
@@ -201,10 +201,10 @@ export const FileTableRow: React.FC<FileTableRowProps> = ({
 
           <button
             onClick={handleCopy}
-            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-all cursor-pointer"
+            className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"
             title="Salin link direct"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
 
           {file.downloadUrl && (
@@ -212,7 +212,7 @@ export const FileTableRow: React.FC<FileTableRowProps> = ({
               href={file.downloadUrl}
               download={file.name}
               onClick={(e) => e.stopPropagation()}
-              className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-sky-500 hover:text-slate-950 text-slate-300 transition-all cursor-pointer"
+              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-sky-500 hover:text-slate-950 text-slate-600 dark:text-slate-300 transition-all cursor-pointer"
               title={`Download ${file.name}`}
             >
               <Download className="w-3.5 h-3.5" />

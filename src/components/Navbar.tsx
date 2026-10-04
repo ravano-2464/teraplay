@@ -16,6 +16,7 @@ import {
   Trash2,
   HelpCircle,
 } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface NavbarProps {
   currentFolder?: string;
@@ -126,14 +127,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl transition-colors duration-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo & Brand */}
           <div className="flex items-center gap-3">
             <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-purple-600 shadow-lg shadow-sky-500/20 text-white">
               <Disc3 className="w-6 h-6 animate-spin-slow" />
               <div
-                className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-slate-950 ${
+                className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white dark:border-slate-950 ${
                   cookieStatus === "valid"
                     ? "bg-emerald-400 animate-pulse"
                     : cookieStatus === "expired"
@@ -144,14 +145,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-sky-300 bg-clip-text text-transparent">
+                <span className="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-sky-600 dark:from-white dark:via-slate-100 dark:to-sky-300 bg-clip-text text-transparent">
                   TeraBox Shows
                 </span>
-                <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30">
+                <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-sky-500/15 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30">
                   v1.0 Live
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-medium hidden sm:block">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:block">
                 Folder Inspector & Intelligent Media Player
               </p>
             </div>
@@ -159,12 +160,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Center / Status info */}
           {currentFolder && (
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800 text-xs text-slate-300">
-              <FolderSearch className="w-3.5 h-3.5 text-sky-400" />
-              <span className="text-slate-400">Folder:</span>
-              <span className="font-semibold text-white truncate max-w-[180px]">{currentFolder}</span>
+            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 shadow-sm">
+              <FolderSearch className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
+              <span className="text-slate-500 dark:text-slate-400">Folder:</span>
+              <span className="font-semibold text-slate-900 dark:text-white truncate max-w-[180px]">{currentFolder}</span>
               {isAudioDetected && (
-                <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
                   <Music2 className="w-3 h-3" /> Audio Active
                 </span>
               )}
@@ -172,28 +173,31 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
 
           {/* Action Tools */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* Theme Toggle (Light / Dark Mode Switcher) */}
+            <ThemeToggle />
+
             {/* TeraBox ndus Cookie Config */}
             <button
               type="button"
               suppressHydrationWarning
               onClick={() => setShowKeyModal(true)}
-              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all cursor-pointer shadow-sm ${
                 cookieStatus === "expired"
-                  ? "bg-rose-500/15 text-rose-300 border-rose-500/40 hover:bg-rose-500/25"
+                  ? "bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/40 hover:bg-rose-500/25"
                   : ndusCookie || cookieStatus === "valid"
-                  ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20"
-                  : "bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-700/60"
+                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20"
+                  : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700/60"
               }`}
               title="Konfigurasi Cookie ndus TeraBox untuk Live Direct Fetch"
             >
               <Key
                 className={`w-3.5 h-3.5 ${
                   cookieStatus === "expired"
-                    ? "text-rose-400 animate-pulse"
+                    ? "text-rose-500 dark:text-rose-400 animate-pulse"
                     : ndusCookie || cookieStatus === "valid"
-                    ? "text-emerald-400"
-                    : "text-amber-400"
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-amber-500 dark:text-amber-400"
                 }`}
               />
               <span className="hidden sm:inline">
@@ -215,42 +219,42 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Modal TeraBox ndus Cookie */}
       {showKeyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg bg-slate-900 border border-sky-500/30 rounded-3xl p-6 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 dark:bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-sky-500/30 rounded-3xl p-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/10">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-sky-400" />
-                <h3 className="font-bold text-base text-white">Live TeraBox Drive API (ndus Cookie)</h3>
+                <ShieldCheck className="w-5 h-5 text-sky-500 dark:text-sky-400" />
+                <h3 className="font-bold text-base text-slate-900 dark:text-white">Live TeraBox Drive API (ndus Cookie)</h3>
               </div>
               <button
                 type="button"
                 suppressHydrationWarning
                 onClick={() => setShowKeyModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="mt-4 space-y-3 text-xs text-slate-300">
+            <div className="mt-4 space-y-3 text-xs text-slate-600 dark:text-slate-300">
               <p>
-                Link dengan format <code className="text-sky-300 bg-slate-800 px-1 py-0.5 rounded">dm.terabox.com/main?path=...</code> adalah <strong>folder drive private</strong> Anda di TeraBox.
+                Link dengan format <code className="text-sky-600 dark:text-sky-300 bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded font-mono">dm.terabox.com/main?path=...</code> adalah <strong>folder drive private</strong> Anda di TeraBox.
               </p>
               <p>
-                Agar server dapat langsung menembak API TeraBox (<code className="text-slate-400 font-mono">dm.terabox.com/api/list</code> & stream) secara real-time dari akun Anda, masukkan nilai cookie <code className="text-emerald-400 font-mono">ndus</code>:
+                Agar server dapat langsung menembak API TeraBox (<code className="text-slate-700 dark:text-slate-400 font-mono">dm.terabox.com/api/list</code> & stream) secara real-time dari akun Anda, masukkan nilai cookie <code className="text-emerald-600 dark:text-emerald-400 font-mono">ndus</code>:
               </p>
 
-              <div className="p-3 rounded-xl bg-slate-950/70 border border-white/5 space-y-1 text-[11px] text-slate-400">
-                <p className="font-semibold text-slate-200">Cara ambil cookie ndus:</p>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-white/5 space-y-1 text-[11px] text-slate-600 dark:text-slate-400">
+                <p className="font-semibold text-slate-900 dark:text-slate-200">Cara ambil cookie ndus:</p>
                 <ol className="list-decimal list-inside space-y-0.5">
-                  <li>Buka tab browser ke <strong className="text-white">terabox.com</strong> (pastikan sudah login).</li>
-                  <li>Tekan <kbd className="bg-slate-800 px-1 rounded text-white">F12</kbd> → Tab <strong>Application / Storage</strong> → <strong>Cookies</strong>.</li>
-                  <li>Salin nilai cookie bernama <code className="text-emerald-300 font-mono">ndus</code>.</li>
+                  <li>Buka tab browser ke <strong className="text-slate-800 dark:text-white">terabox.com</strong> (pastikan sudah login).</li>
+                  <li>Tekan <kbd className="bg-slate-200 dark:bg-slate-800 px-1 rounded text-slate-800 dark:text-white">F12</kbd> → Tab <strong>Application / Storage</strong> → <strong>Cookies</strong>.</li>
+                  <li>Salin nilai cookie bernama <code className="text-emerald-600 dark:text-emerald-300 font-mono">ndus</code>.</li>
                 </ol>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">
+                <label className="block text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
                   Nilai Cookie ndus:
                 </label>
                 <div className="flex items-center gap-2">
@@ -259,13 +263,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                     value={cookieInput}
                     onChange={(e) => setCookieInput(e.target.value)}
                     placeholder="Contoh: YXNkZjEyMz... atau ndus=YXNkZjEyMz..."
-                    className="w-full p-2.5 rounded-xl glass-input text-xs font-mono text-white border border-slate-700 focus:border-sky-500"
+                    className="w-full p-2.5 rounded-xl glass-input text-xs font-mono border border-slate-300 dark:border-slate-700 focus:border-sky-500"
                   />
                   {cookieInput && (
                     <button
                       type="button"
                       onClick={handleClear}
-                      className="p-2.5 rounded-xl bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700 transition-colors cursor-pointer"
+                      className="p-2.5 rounded-xl bg-slate-100 hover:bg-rose-50 dark:bg-slate-800 dark:hover:bg-rose-500/20 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                       title="Hapus token tersimpan"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -279,16 +283,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div
                   className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 animate-in fade-in duration-200 ${
                     validationResult.status === "valid"
-                      ? "bg-emerald-950/60 border-emerald-500/40 text-emerald-200"
+                      ? "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-200"
                       : validationResult.status === "expired"
-                      ? "bg-rose-950/60 border-rose-500/40 text-rose-200"
-                      : "bg-amber-950/60 border-amber-500/40 text-amber-200"
+                      ? "bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-500/40 text-rose-800 dark:text-rose-200"
+                      : "bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-500/40 text-amber-800 dark:text-amber-200"
                   }`}
                 >
                   {validationResult.status === "valid" ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                   ) : (
-                    <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                    <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                   )}
                   <div>
                     <p className="font-bold">
@@ -304,14 +308,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
-            <div className="mt-5 flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-white/5">
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-slate-100 dark:border-white/5">
               <button
                 type="button"
                 disabled={isValidating || !cookieInput.trim()}
                 onClick={() => handleValidate()}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 disabled:opacity-50 cursor-pointer transition-all"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 disabled:opacity-50 cursor-pointer transition-all shadow-sm"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isValidating ? "animate-spin text-sky-400" : ""}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${isValidating ? "animate-spin text-sky-500" : ""}`} />
                 <span>{isValidating ? "Memverifikasi..." : "Verifikasi Validitas Token"}</span>
               </button>
 
@@ -320,7 +324,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   type="button"
                   suppressHydrationWarning
                   onClick={() => setShowKeyModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
                 >
                   Tutup
                 </button>

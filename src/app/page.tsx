@@ -557,18 +557,18 @@ export default function Home() {
 
         {/* Private Folder / Cookie Required Banner */}
         {folderData?.requiresCookie && (
-          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs sm:text-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+          <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs sm:text-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
             <div className="flex items-start gap-3">
-              <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 shrink-0 mt-0.5">
+              <div className="p-2 rounded-xl bg-amber-500/15 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
                 <Key className="w-5 h-5" />
               </div>
               <div>
-                <p className="font-bold text-white text-sm">
+                <p className="font-bold text-slate-900 dark:text-white text-sm">
                   {cookieStatus === "expired"
                     ? "Sesi Cookie ndus Kedaluwarsa (Expired)"
                     : "Folder Private TeraBox (dm.terabox.com)"}
                 </p>
-                <p className="text-amber-300 text-xs mt-0.5">
+                <p className="text-amber-700 dark:text-amber-300 text-xs mt-0.5">
                   {folderData.noticeMessage ||
                     "Link ini adalah folder private TeraBox Anda. Untuk mengakses file dan streaming, hubungkan Cookie ndus yang aktif."}
                 </p>
@@ -585,15 +585,15 @@ export default function Home() {
 
         {/* Error Alert with Auto-Fallback Notice */}
         {errorMessage && (
-          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs sm:text-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+          <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-300 text-xs sm:text-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-rose-500/20 text-rose-400 shrink-0">
+              <div className="p-2 rounded-xl bg-rose-500/15 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 shrink-0">
                 <AlertCircle className="w-5 h-5" />
               </div>
               <div>
-                <p className="font-bold text-white text-sm">Kendala API TeraBox</p>
-                <p className="text-rose-300 text-xs mt-0.5">{errorMessage}</p>
-                <p className="text-[11px] text-emerald-400 font-medium mt-1">
+                <p className="font-bold text-rose-950 dark:text-white text-sm">Kendala API TeraBox</p>
+                <p className="text-rose-700 dark:text-rose-300 text-xs mt-0.5">{errorMessage}</p>
+                <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium mt-1">
                   ⚡ Fitur YouTube Auto-Fallback aktif: Lagu yang error akan otomatis dicari dan diputar dari YouTube secara 100% Bebas Iklan.
                 </p>
               </div>
@@ -603,15 +603,15 @@ export default function Home() {
 
         {/* Initial Welcome State if no folder loaded */}
         {!folderData && !isLoading && !errorMessage && (
-          <div className="glass-panel rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center justify-center border border-white/5 bg-slate-950/60 shadow-2xl">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-500/20 to-indigo-500/20 text-sky-400 border border-sky-500/30 flex items-center justify-center mb-4">
+          <div className="glass-panel rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center justify-center border border-slate-200/80 dark:border-white/5 bg-white/80 dark:bg-slate-950/60 shadow-xl shadow-slate-200/30 dark:shadow-2xl">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-500/15 to-indigo-500/15 dark:from-sky-500/20 dark:to-indigo-500/20 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-500/30 flex items-center justify-center mb-4">
               <FolderSearch className="w-8 h-8" />
             </div>
-            <h3 className="font-black text-lg sm:text-xl text-white">
+            <h3 className="font-black text-lg sm:text-xl text-slate-900 dark:text-white">
               Siap Menginspeksi Link TeraBox Anda
             </h3>
-            <p className="text-xs sm:text-sm text-slate-400 mt-2 max-w-lg">
-              Masukkan link share TeraBox (<code className="text-sky-300 font-mono">terabox.com/s/1xxxx</code>) atau link folder pribadi di kolom atas untuk melihat daftar file lengkap, rincian ukuran MB, serta memutar audio dan video secara langsung.
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-lg">
+              Masukkan link share TeraBox (<code className="text-sky-600 dark:text-sky-300 font-mono">terabox.com/s/1xxxx</code>) atau link folder pribadi di kolom atas untuk melihat daftar file lengkap, rincian ukuran MB, serta memutar audio dan video secara langsung.
             </p>
           </div>
         )}
@@ -657,11 +657,11 @@ export default function Home() {
               <>
                 {viewMode === "table" ? (
                   /* Table View */
-                  <div className="glass-panel rounded-2xl overflow-hidden border border-white/5 bg-slate-950/70 shadow-xl">
+                  <div className="glass-panel rounded-2xl overflow-hidden border border-slate-200/80 dark:border-white/5 bg-white/80 dark:bg-slate-950/70 shadow-lg shadow-slate-200/30 dark:shadow-xl">
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="border-b border-white/10 bg-slate-900/80 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                          <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/80 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                             <th className="py-3 pl-4 pr-2 w-12 text-center">#</th>
                             <th className="py-3 px-3">Nama File</th>
                             <th className="py-3 px-3 hidden sm:table-cell">Format</th>
@@ -719,13 +719,13 @@ export default function Home() {
               </>
             ) : (
               /* Empty Search / Category State */
-              <div className="glass-panel rounded-3xl p-12 text-center flex flex-col items-center justify-center border border-white/5 bg-slate-950/40">
-                <div className="p-4 rounded-full bg-slate-900 text-slate-500 mb-3">
+              <div className="glass-panel rounded-3xl p-12 text-center flex flex-col items-center justify-center border border-slate-200/80 dark:border-white/5 bg-white/80 dark:bg-slate-950/40 shadow-lg">
+                <div className="p-4 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 mb-3">
                   <FileQuestion className="w-8 h-8" />
                 </div>
-                <h3 className="font-bold text-base text-slate-200">Tidak ada file yang cocok</h3>
-                <p className="text-xs text-slate-400 mt-1 max-w-sm">
-                  Tidak ditemukan file untuk kategori <span className="text-sky-400">"{selectedCategory}"</span>
+                <h3 className="font-bold text-base text-slate-800 dark:text-slate-200">Tidak ada file yang cocok</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
+                  Tidak ditemukan file untuk kategori <span className="text-sky-600 dark:text-sky-400 font-semibold">"{selectedCategory}"</span>
                   {searchQuery ? ` dengan kata kunci "${searchQuery}"` : ""}.
                 </p>
                 <button
@@ -734,7 +734,7 @@ export default function Home() {
                     setSearchQuery("");
                     setCurrentPage(1);
                   }}
-                  className="mt-4 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition-all cursor-pointer"
+                  className="mt-4 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-transparent transition-all cursor-pointer shadow-sm"
                 >
                   Reset Filter & Pencarian
                 </button>
