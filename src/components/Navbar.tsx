@@ -138,9 +138,9 @@ export const Navbar: React.FC<NavbarProps> = ({
     <>
       <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl transition-colors duration-200 shadow-sm">
         {/* Main Navbar Top Row */}
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
+        <div className="relative max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
           {/* Logo & Brand */}
-          <div className="flex items-center gap-2.5 shrink-0 min-w-0">
+          <div className="flex items-center gap-2.5 shrink-0 min-w-0 z-10">
             <div className="relative flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-purple-600 shadow-lg shadow-sky-500/20 text-white shrink-0">
               <Disc3 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin-slow" />
               <div
@@ -168,8 +168,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </div>
 
-          {/* Mode Switcher (Desktop: Centered in Navbar) */}
-          <div className="hidden md:flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-inner shrink-0">
+          {/* Mode Switcher (Desktop: Always Perfectly Centered in Navbar) */}
+          <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-inner z-10 shrink-0">
             <button
               type="button"
               suppressHydrationWarning
@@ -202,7 +202,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Action Tools (Language, Theme, Cookie) */}
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0 z-10 ml-auto">
             {/* Language Selector */}
             <LanguageSelector />
 
