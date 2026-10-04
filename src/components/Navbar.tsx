@@ -19,6 +19,8 @@ import {
   Zap,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { LanguageSelector } from "./LanguageSelector";
+import { useI18n } from "@/context/I18nContext";
 
 interface NavbarProps {
   currentFolder?: string;
@@ -47,6 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   appMode = "terabox",
   onModeChange,
 }) => {
+  const { t } = useI18n();
   const [internalModalOpen, setInternalModalOpen] = useState(false);
   const [cookieInput, setCookieInput] = useState(ndusCookie);
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -133,14 +136,15 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl transition-colors duration-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-white/10 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl transition-colors duration-200 shadow-sm">
+        {/* Main Navbar Top Row */}
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
           {/* Logo & Brand */}
-          <div className="flex items-center gap-3">
-            <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-purple-600 shadow-lg shadow-sky-500/20 text-white">
-              <Disc3 className="w-6 h-6 animate-spin-slow" />
+          <div className="flex items-center gap-2.5 shrink-0 min-w-0">
+            <div className="relative flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-purple-600 shadow-lg shadow-sky-500/20 text-white shrink-0">
+              <Disc3 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin-slow" />
               <div
-                className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white dark:border-slate-950 ${
+                className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white dark:border-slate-950 ${
                   cookieStatus === "valid"
                     ? "bg-emerald-400 animate-pulse"
                     : cookieStatus === "expired"
@@ -149,58 +153,59 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }`}
               />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-sky-600 dark:from-white dark:via-slate-100 dark:to-sky-300 bg-clip-text text-transparent">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="font-extrabold text-base sm:text-xl tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-sky-600 dark:from-white dark:via-slate-100 dark:to-sky-300 bg-clip-text text-transparent truncate">
                   TeraBox Shows
                 </span>
-                <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-sky-500/15 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30">
+                <span className="hidden xs:inline-block text-[9px] sm:text-[10px] uppercase font-bold tracking-widest px-1.5 sm:px-2 py-0.5 rounded-full bg-sky-500/15 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shrink-0">
                   v1.0 Live
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:block">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden md:block">
                 Folder Inspector & Intelligent Media Player
               </p>
             </div>
           </div>
 
-          {/* Mode Switcher */}
-          <div className="flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-inner">
+          {/* Mode Switcher (Desktop: Centered in Navbar) */}
+          <div className="hidden md:flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-inner shrink-0">
             <button
               type="button"
               suppressHydrationWarning
               onClick={() => onModeChange?.("terabox")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 appMode === "terabox"
                   ? "bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-sm border border-slate-200/80 dark:border-white/10"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
               }`}
-              title="Beralih ke mode Inspeksi Folder TeraBox"
+              title={t.nav.teraboxMode}
             >
               <FolderSearch className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">TeraBox Drive</span>
-              <span className="sm:hidden">TeraBox</span>
+              <span>{t.nav.teraboxMode}</span>
             </button>
 
             <button
               type="button"
               suppressHydrationWarning
               onClick={() => onModeChange?.("youtube")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 appMode === "youtube"
                   ? "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-md shadow-red-500/25"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
               }`}
-              title="Beralih ke Full Mode YouTube (100% Bebas Iklan)"
+              title={t.nav.youtubeMode}
             >
-              <Youtube className={`w-3.5 h-3.5 ${appMode === "youtube" ? "text-white fill-current" : "text-red-500"}`} />
-              <span className="hidden sm:inline">YouTube (No Ads)</span>
-              <span className="sm:hidden">YouTube</span>
+              <Youtube className={`w-3.5 h-3.5 ${appMode === "youtube" ? "text-white" : "text-red-500"}`} />
+              <span>{t.nav.youtubeMode}</span>
             </button>
           </div>
 
-          {/* Action Tools */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Action Tools (Language, Theme, Cookie) */}
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {/* Language Selector */}
+            <LanguageSelector />
+
             {/* Theme Toggle (Light / Dark Mode Switcher) */}
             <ThemeToggle />
 
@@ -210,14 +215,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                 type="button"
                 suppressHydrationWarning
                 onClick={() => setShowKeyModal(true)}
-                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all cursor-pointer shadow-sm ${
+                className={`flex items-center gap-1.5 text-xs font-semibold px-2 sm:px-3 py-1.5 rounded-xl border transition-all cursor-pointer shadow-sm ${
                   cookieStatus === "expired"
                     ? "bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/40 hover:bg-rose-500/25"
                     : ndusCookie || cookieStatus === "valid"
                     ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20"
                     : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700/60"
                 }`}
-                title="Konfigurasi Cookie ndus TeraBox untuk Live Direct Fetch"
+                title={t.nav.setCookie}
               >
                 <Key
                   className={`w-3.5 h-3.5 ${
@@ -230,18 +235,53 @@ export const Navbar: React.FC<NavbarProps> = ({
                 />
                 <span className="hidden lg:inline">
                   {cookieStatus === "expired"
-                    ? "Cookie ndus Expired (Perbarui)"
+                    ? t.nav.cookieExpired
                     : cookieStatus === "valid"
-                    ? "Live API Connected (Valid)"
+                    ? t.nav.cookieValid
                     : ndusCookie
-                    ? "Live API Connected"
-                    : "Set Cookie ndus"}
+                    ? t.nav.cookieConnected
+                    : t.nav.setCookie}
                 </span>
-                <span className="lg:hidden">
+                <span className="hidden sm:inline lg:hidden">
                   {cookieStatus === "expired" ? "Expired" : ndusCookie ? "Connected" : "Cookie"}
                 </span>
               </button>
             )}
+          </div>
+        </div>
+
+        {/* Mobile Mode Switcher Sub-Bar (Visible on mobile screens < md) */}
+        <div className="md:hidden px-3 pb-2.5 pt-0.5 border-t border-slate-100/80 dark:border-white/5 bg-slate-50/50 dark:bg-slate-950/50">
+          <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-slate-200/70 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 shadow-inner">
+            <button
+              type="button"
+              suppressHydrationWarning
+              onClick={() => onModeChange?.("terabox")}
+              className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                appMode === "terabox"
+                  ? "bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-md border border-slate-200/80 dark:border-white/10"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
+              }`}
+              title={t.nav.teraboxMode}
+            >
+              <FolderSearch className="w-4 h-4 text-sky-500 shrink-0" />
+              <span className="truncate">{t.nav.teraboxMode}</span>
+            </button>
+
+            <button
+              type="button"
+              suppressHydrationWarning
+              onClick={() => onModeChange?.("youtube")}
+              className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                appMode === "youtube"
+                  ? "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-md shadow-red-500/25 font-black"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
+              }`}
+              title={t.nav.youtubeMode}
+            >
+              <Youtube className={`w-4 h-4 shrink-0 ${appMode === "youtube" ? "text-white" : "text-red-500"}`} />
+              <span className="truncate">{t.nav.youtubeMode}</span>
+            </button>
           </div>
         </div>
       </header>

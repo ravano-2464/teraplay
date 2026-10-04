@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { I18nProvider } from "@/context/I18nContext";
 
 export const metadata: Metadata = {
   title: "TeraBox Shows - Folder Inspector & Intelligent Media Player",
@@ -52,11 +53,14 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <ThemeProvider>
-          {/* Ambient Background Gradient for Light and Dark mode */}
-          <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-sky-100/60 via-slate-50 to-indigo-50/40 dark:from-slate-900 dark:via-[#070b14] dark:to-[#04060a] -z-10 pointer-events-none transition-colors duration-300" />
-          {children}
+          <I18nProvider>
+            {/* Ambient Background Gradient for Light and Dark mode */}
+            <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-sky-100/60 via-slate-50 to-indigo-50/40 dark:from-slate-900 dark:via-[#070b14] dark:to-[#04060a] -z-10 pointer-events-none transition-colors duration-300" />
+            {children}
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>
   );
 }
+

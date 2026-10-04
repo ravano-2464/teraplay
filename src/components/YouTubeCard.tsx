@@ -16,6 +16,7 @@ import {
   Eye,
 } from "lucide-react";
 import { TeraBoxFile } from "@/types/terabox";
+import { useI18n } from "@/context/I18nContext";
 
 interface YouTubeCardProps {
   track: TeraBoxFile;
@@ -32,6 +33,7 @@ export const YouTubeCard: React.FC<YouTubeCardProps> = ({
   onOpenVideo,
   onAddToQueue,
 }) => {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const [queued, setQueued] = useState(false);
 
@@ -87,9 +89,8 @@ export const YouTubeCard: React.FC<YouTubeCardProps> = ({
           </div>
         )}
 
-        {/* YouTube logo tag */}
         <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-red-600/90 backdrop-blur-md text-[10px] font-bold text-white flex items-center gap-1 shadow-sm">
-          <Youtube className="w-3 h-3 fill-current" />
+          <Youtube className="w-3 h-3 text-white" />
           <span>YouTube</span>
         </div>
 
@@ -106,7 +107,7 @@ export const YouTubeCard: React.FC<YouTubeCardProps> = ({
               onPlayAudio(track);
             }}
             className="w-11 h-11 rounded-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-500/40 hover:scale-110 active:scale-95 transition-all cursor-pointer"
-            title={isCurrentlyPlaying ? "Jeda Audio" : "Putar Audio (Bebas Iklan)"}
+            title={isCurrentlyPlaying ? t.common.actions : t.youtube.playAudio}
           >
             {isCurrentlyPlaying ? (
               <Pause className="w-5 h-5 fill-current" />
@@ -122,7 +123,7 @@ export const YouTubeCard: React.FC<YouTubeCardProps> = ({
               onOpenVideo(track);
             }}
             className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white flex items-center justify-center border border-white/30 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-            title="Tonton Video (Bebas Iklan)"
+            title={t.youtube.watchVideo}
           >
             <Film className="w-4 h-4" />
           </button>
@@ -162,12 +163,12 @@ export const YouTubeCard: React.FC<YouTubeCardProps> = ({
           {isCurrentlyPlaying ? (
             <>
               <Radio className="w-3.5 h-3.5 animate-pulse text-rose-500" />
-              <span>Memutar</span>
+              <span>{t.youtube.playing}</span>
             </>
           ) : (
             <>
               <Music className="w-3.5 h-3.5" />
-              <span>Putar Audio</span>
+              <span>{t.youtube.playAudio}</span>
             </>
           )}
         </button>
@@ -178,7 +179,7 @@ export const YouTubeCard: React.FC<YouTubeCardProps> = ({
               type="button"
               onClick={handleQueue}
               className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              title="Tambahkan ke antrean playlist"
+              title={t.youtube.addToQueue}
             >
               {queued ? <Check className="w-4 h-4 text-emerald-500" /> : <Plus className="w-4 h-4" />}
             </button>
@@ -191,7 +192,7 @@ export const YouTubeCard: React.FC<YouTubeCardProps> = ({
               onOpenVideo(track);
             }}
             className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            title="Tonton Video"
+            title={t.youtube.watchVideo}
           >
             <Film className="w-4 h-4" />
           </button>
@@ -200,7 +201,7 @@ export const YouTubeCard: React.FC<YouTubeCardProps> = ({
             type="button"
             onClick={handleCopy}
             className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            title="Salin Link YouTube"
+            title={t.youtube.copyLink}
           >
             {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
           </button>
@@ -212,7 +213,7 @@ export const YouTubeCard: React.FC<YouTubeCardProps> = ({
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
               className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              title="Buka di YouTube"
+              title={t.youtube.openYouTube}
             >
               <ExternalLink className="w-4 h-4" />
             </a>
@@ -222,3 +223,4 @@ export const YouTubeCard: React.FC<YouTubeCardProps> = ({
     </div>
   );
 };
+

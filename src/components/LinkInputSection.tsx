@@ -14,6 +14,7 @@ import {
   FileText,
   Upload,
 } from "lucide-react";
+import { useI18n } from "@/context/I18nContext";
 
 interface LinkInputSectionProps {
   onInspect: (url: string) => Promise<void>;
@@ -28,6 +29,7 @@ export const LinkInputSection: React.FC<LinkInputSectionProps> = ({
   initialUrl = "",
   onImportCustomFiles,
 }) => {
+  const { t } = useI18n();
   const [url, setUrl] = useState(initialUrl);
   const [copiedSuccess, setCopiedSuccess] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -78,10 +80,10 @@ export const LinkInputSection: React.FC<LinkInputSectionProps> = ({
             <div>
               <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
                 <Link2 className="w-6 h-6 text-sky-500 dark:text-sky-400" />
-                <span>Inspeksi Link Folder TeraBox</span>
+                <span>{t.teraboxInput.title}</span>
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                Masukkan link TeraBox untuk melihat isi file, ukuran MB, dan deteksi otomatis media player.
+                {t.teraboxInput.subtitle}
               </p>
             </div>
 
@@ -94,11 +96,11 @@ export const LinkInputSection: React.FC<LinkInputSectionProps> = ({
                 className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-100 dark:hover:bg-indigo-500/30 transition-all cursor-pointer"
               >
                 <FileText className="w-3.5 h-3.5" />
-                <span>Paste Daftar File Manual</span>
+                <span>{t.teraboxInput.pasteManual}</span>
               </button>
               <div className="hidden sm:flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/20">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Auto-Detect Media</span>
+                <span>{t.teraboxInput.autoDetect}</span>
               </div>
             </div>
           </div>
@@ -114,7 +116,7 @@ export const LinkInputSection: React.FC<LinkInputSectionProps> = ({
                   type="text"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder="Paste link TeraBox (contoh: https://terabox.com/s/1xxxxxx atau https://dm.terabox.com/main?path=/)"
+                  placeholder={t.teraboxInput.placeholder}
                   className="w-full pl-11 pr-24 py-3.5 rounded-2xl glass-input text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 border border-slate-300 dark:border-slate-700/80 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 transition-all shadow-inner"
                   required
                   suppressHydrationWarning
@@ -129,12 +131,12 @@ export const LinkInputSection: React.FC<LinkInputSectionProps> = ({
                   {copiedSuccess ? (
                     <>
                       <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
-                      <span className="text-emerald-600 dark:text-emerald-400">Pasted</span>
+                      <span className="text-emerald-600 dark:text-emerald-400">{t.teraboxInput.pastedBtn}</span>
                     </>
                   ) : (
                     <>
                       <Clipboard className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Paste</span>
+                      <span>{t.teraboxInput.pasteBtn}</span>
                     </>
                   )}
                 </button>
@@ -149,11 +151,11 @@ export const LinkInputSection: React.FC<LinkInputSectionProps> = ({
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
-                    <span>Menganalisis...</span>
+                    <span>{t.teraboxInput.inspectingBtn}</span>
                   </>
                 ) : (
                   <>
-                    <span>Inspect Folder</span>
+                    <span>{t.teraboxInput.inspectBtn}</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
@@ -163,7 +165,7 @@ export const LinkInputSection: React.FC<LinkInputSectionProps> = ({
 
           {/* Quick Preset Buttons */}
           <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-white/5 text-xs">
-            <span className="text-slate-500 dark:text-slate-400 font-medium">Format yang didukung:</span>
+            <span className="text-slate-500 dark:text-slate-400 font-medium">{t.teraboxInput.quickSamples}</span>
             <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 font-mono text-[11px]">
               https://terabox.com/s/1xxxxxx
             </span>
@@ -177,10 +179,10 @@ export const LinkInputSection: React.FC<LinkInputSectionProps> = ({
                 setPresetUrl("https://dm.terabox.com/main?category=all&path=%2F")
               }
               className="px-3 py-1 rounded-lg bg-sky-50 dark:bg-sky-500/10 hover:bg-sky-100 dark:hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-500/30 transition-all flex items-center gap-1.5 cursor-pointer font-medium"
-              title="Inspect Root Private Drive Anda"
+              title="Inspect Root Private Drive"
             >
               <Search className="w-3 h-3 text-sky-500 dark:text-sky-400" />
-              <span>Root Drive Pribadi (/)</span>
+              <span>{t.teraboxInput.sampleDrive}</span>
             </button>
           </div>
         </div>
@@ -192,16 +194,16 @@ export const LinkInputSection: React.FC<LinkInputSectionProps> = ({
           <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-indigo-500/30 rounded-3xl p-6 shadow-2xl">
             <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2 flex items-center gap-2">
               <Upload className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
-              <span>Paste Daftar File / Data TeraBox</span>
+              <span>{t.teraboxInput.manualModalTitle}</span>
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-              Anda dapat menempelkan teks daftar file hasil salinan dari halaman TeraBox web Anda (nama file dan ukurannya).
+              {t.teraboxInput.manualModalDesc}
             </p>
 
             <textarea
               value={importText}
               onChange={(e) => setImportText(e.target.value)}
-              placeholder={`Contoh:\nATLXS - PASSO BEM SOLTO (SLOWED).mp4  46.7M\nslxughter - fragment (slowed).mp4  4.3M\n.Feast - o,Tuan (Official Music Video).mp4  30.8M\nNadin Amizah - Taruh (Official Lyric Video).mp4  95.6M`}
+              placeholder={t.teraboxInput.manualModalPlaceholder}
               rows={7}
               className="w-full p-3 rounded-2xl glass-input text-xs text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 border border-slate-300 dark:border-slate-700 focus:border-indigo-500 font-mono mb-4"
             />
@@ -213,7 +215,7 @@ export const LinkInputSection: React.FC<LinkInputSectionProps> = ({
                 onClick={() => setShowImportModal(false)}
                 className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
               >
-                Batal
+                {t.teraboxInput.manualModalCancel}
               </button>
               <button
                 type="button"
@@ -222,7 +224,7 @@ export const LinkInputSection: React.FC<LinkInputSectionProps> = ({
                 disabled={!importText.trim()}
                 className="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20 disabled:opacity-50 transition-all cursor-pointer"
               >
-                Impor & Deteksi File
+                {t.teraboxInput.manualModalSubmit}
               </button>
             </div>
           </div>
@@ -231,3 +233,4 @@ export const LinkInputSection: React.FC<LinkInputSectionProps> = ({
     </div>
   );
 };
+

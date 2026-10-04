@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { TeraBoxFile } from "@/types/terabox";
 import { CATEGORY_COLORS, formatDuration } from "@/lib/formatters";
+import { useI18n } from "../context/I18nContext";
 
 interface FileTableRowProps {
   file: TeraBoxFile;
@@ -39,6 +40,7 @@ export const FileTableRow: React.FC<FileTableRowProps> = ({
   onPlayYouTube,
   onOpenFolder,
 }) => {
+  const { t } = useI18n();
   const [copied, setCopied] = React.useState(false);
   const styling = CATEGORY_COLORS[file.category] || CATEGORY_COLORS.other;
 
@@ -180,7 +182,7 @@ export const FileTableRow: React.FC<FileTableRowProps> = ({
                 }
               }}
               className="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 transition-all cursor-pointer"
-              title="Putar di YouTube (Bebas Iklan)"
+              title={t.youtube.playAudio}
             >
               <Youtube className="w-3.5 h-3.5" />
             </button>
@@ -193,7 +195,7 @@ export const FileTableRow: React.FC<FileTableRowProps> = ({
                 onOpenVideo(file);
               }}
               className="p-1.5 rounded-lg bg-cyan-50 dark:bg-cyan-500/10 hover:bg-cyan-100 dark:hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-500/30 transition-all cursor-pointer"
-              title="Tonton Video"
+              title={t.youtube.watchVideo}
             >
               <Film className="w-3.5 h-3.5" />
             </button>
@@ -202,7 +204,7 @@ export const FileTableRow: React.FC<FileTableRowProps> = ({
           <button
             onClick={handleCopy}
             className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"
-            title="Salin link direct"
+            title={copied ? t.common.copied : t.common.copyLink}
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
@@ -213,7 +215,7 @@ export const FileTableRow: React.FC<FileTableRowProps> = ({
               download={file.name}
               onClick={(e) => e.stopPropagation()}
               className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-sky-500 hover:text-slate-950 text-slate-600 dark:text-slate-300 transition-all cursor-pointer"
-              title={`Download ${file.name}`}
+              title={`${t.common.download} ${file.name}`}
             >
               <Download className="w-3.5 h-3.5" />
             </a>

@@ -9,6 +9,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { CustomSelect } from "./CustomSelect";
+import { useI18n } from "../context/I18nContext";
 
 interface PaginationProps {
   currentPage: number;
@@ -27,6 +28,7 @@ export const Pagination: React.FC<PaginationProps> = ({
   onItemsPerPageChange,
   className = "",
 }) => {
+  const { t } = useI18n();
   const isAll = itemsPerPage >= totalItems && totalItems > 0;
   const totalPages = isAll ? 1 : Math.ceil(totalItems / itemsPerPage) || 1;
   const [jumpPage, setJumpPage] = useState<string>("");
@@ -87,18 +89,18 @@ export const Pagination: React.FC<PaginationProps> = ({
       {/* Left: Summary Info & Items Per Page Selector */}
       <div className="flex items-center gap-4 flex-wrap justify-center md:justify-start text-slate-600 dark:text-slate-400">
         <div>
-          Menampilkan{" "}
+          {t.pagination.showing}{" "}
           <span className="font-bold text-slate-900 dark:text-white">
             {isAll ? `1 - ${totalItems}` : `${startItem} - ${endItem}`}
           </span>{" "}
-          dari <span className="font-bold text-sky-600 dark:text-sky-400">{totalItems}</span> file
+          {t.pagination.of} <span className="font-bold text-sky-600 dark:text-sky-400">{totalItems}</span> {t.pagination.items}
         </div>
 
         <div className="h-4 w-px bg-slate-200 dark:bg-white/10 hidden sm:block" />
 
         {/* Page size dropdown */}
         <div className="flex items-center gap-2">
-          <span className="text-slate-500 dark:text-slate-400 hidden sm:inline">Per halaman:</span>
+          <span className="text-slate-500 dark:text-slate-400 hidden sm:inline">{t.pagination.perPage}:</span>
           <CustomSelect
             value={isAll ? 99999 : itemsPerPage}
             onChange={(val) => {
@@ -106,11 +108,11 @@ export const Pagination: React.FC<PaginationProps> = ({
               onPageChange(1);
             }}
             options={[
-              { value: 10, label: "10 file" },
-              { value: 25, label: "25 file" },
-              { value: 50, label: "50 file" },
-              { value: 100, label: "100 file" },
-              { value: 99999, label: `Semua (${totalItems})` },
+              { value: 10, label: `10 ${t.pagination.items}` },
+              { value: 25, label: `25 ${t.pagination.items}` },
+              { value: 50, label: `50 ${t.pagination.items}` },
+              { value: 100, label: `100 ${t.pagination.items}` },
+              { value: 99999, label: `${t.pagination.all} (${totalItems})` },
             ]}
             size="sm"
             dropUp={true}
@@ -127,7 +129,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
           className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
-          title="Halaman Pertama"
+          title={t.pagination.prev}
         >
           <ChevronsLeft className="w-4 h-4" />
         </button>
@@ -137,7 +139,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
           className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
-          title="Halaman Sebelumnya"
+          title={t.pagination.prev}
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
@@ -178,7 +180,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages || totalPages === 0}
           className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
-          title="Halaman Berikutnya"
+          title={t.pagination.next}
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -188,7 +190,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages || totalPages === 0}
           className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-sm"
-          title="Halaman Terakhir"
+          title={t.pagination.next}
         >
           <ChevronsRight className="w-4 h-4" />
         </button>
@@ -199,7 +201,6 @@ export const Pagination: React.FC<PaginationProps> = ({
             onSubmit={handleJumpSubmit}
             className="flex items-center gap-1.5 ml-1 pl-2 border-l border-slate-200 dark:border-white/10"
           >
-            <span className="text-slate-500 hidden sm:inline">Ke hal:</span>
             <input
               type="number"
               min={1}

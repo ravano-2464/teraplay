@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { TeraBoxFolderResult, FileCategory } from "@/types/terabox";
 import { CustomSelect } from "./CustomSelect";
+import { useI18n } from "@/context/I18nContext";
 
 interface FolderStatsHeaderProps {
   folderData: TeraBoxFolderResult;
@@ -56,6 +57,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
   onSortChange,
   filteredCount,
 }) => {
+  const { t } = useI18n();
   const [copied, setCopied] = React.useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { stats } = folderData;
@@ -93,12 +95,12 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
   };
 
   const categories = [
-    { id: "all", label: "Semua File", count: stats.totalFiles, icon: Folder },
-    { id: "audio", label: "Audio", count: stats.audioCount, icon: Music, color: "text-emerald-500 dark:text-emerald-400" },
-    { id: "video", label: "Video", count: stats.videoCount, icon: Film, color: "text-cyan-500 dark:text-cyan-400" },
-    { id: "image", label: "Gambar", count: stats.imageCount, icon: ImageIcon, color: "text-purple-500 dark:text-purple-400" },
-    { id: "document", label: "Dokumen", count: stats.docCount, icon: FileText, color: "text-amber-500 dark:text-amber-400" },
-    { id: "archive", label: "Arsip", count: stats.archiveCount, icon: Archive, color: "text-rose-500 dark:text-rose-400" },
+    { id: "all", label: t.statsHeader.filterAll, count: stats.totalFiles, icon: Folder },
+    { id: "audio", label: t.statsHeader.filterAudio, count: stats.audioCount, icon: Music, color: "text-emerald-500 dark:text-emerald-400" },
+    { id: "video", label: t.statsHeader.filterVideo, count: stats.videoCount, icon: Film, color: "text-cyan-500 dark:text-cyan-400" },
+    { id: "image", label: t.statsHeader.filterImage, count: stats.imageCount, icon: ImageIcon, color: "text-purple-500 dark:text-purple-400" },
+    { id: "document", label: t.statsHeader.filterDoc, count: stats.docCount, icon: FileText, color: "text-amber-500 dark:text-amber-400" },
+    { id: "archive", label: t.statsHeader.filterArchive, count: stats.archiveCount, icon: Archive, color: "text-rose-500 dark:text-rose-400" },
   ];
 
   const quickTags = [

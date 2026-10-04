@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { TeraBoxFile } from "@/types/terabox";
 import { formatDuration } from "@/lib/formatters";
+import { useI18n } from "../context/I18nContext";
 
 interface VideoModalProps {
   file: TeraBoxFile | null;
@@ -24,6 +25,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
   onClose,
   onDurationLoaded,
 }) => {
+  const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -205,7 +207,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                 <span className="truncate">{ytFallbackTrack?.title || file.name}</span>
                 {isYouTubeMode && (
                   <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30">
-                    YouTube Bebas Iklan
+                    {t.videoModal.adFreeVideo}
                   </span>
                 )}
               </h3>
@@ -216,10 +218,9 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                 {displayDuration && (
                   <>
                     <span>•</span>
-                    <span>Durasi: {displayDuration}</span>
+                    <span>{t.common.duration}: {displayDuration}</span>
                   </>
                 )}
-                <span className="hidden md:inline text-slate-400 dark:text-slate-500">• (Geser / Drag window)</span>
               </p>
             </div>
           </div>
@@ -232,11 +233,11 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                 onClick={triggerYouTubeFallback}
                 disabled={isSearchingFallback}
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-500/20 hover:bg-rose-100 dark:hover:bg-rose-500/30 text-rose-600 dark:text-rose-300 text-xs font-semibold border border-rose-200 dark:border-rose-500/30 transition-all cursor-pointer shadow-sm"
-                title="Beralih ke pemutaran YouTube Bebas Iklan"
+                title={t.nav.youtubeMode}
               >
                 <Film className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" />
                 <span className="hidden sm:inline">
-                  {isSearchingFallback ? "Mencari..." : "Mode YouTube"}
+                  {isSearchingFallback ? "..." : "YouTube"}
                 </span>
               </button>
             )}
@@ -246,7 +247,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
               <button
                 onClick={handleResetPosition}
                 className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"
-                title="Pusatkan kembali jendela video (Reset Posisi)"
+                title="Reset"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
@@ -256,7 +257,6 @@ export const VideoModal: React.FC<VideoModalProps> = ({
             <button
               onClick={handleToggleMaximize}
               className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"
-              title={isMaximized ? "Perkecil (Restore)" : "Perbesar (Maximize)"}
             >
               {isMaximized ? (
                 <Minimize2 className="w-3.5 h-3.5" />
@@ -271,10 +271,10 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                 href={file.downloadUrl}
                 download={file.name}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-cyan-50 dark:bg-cyan-500/20 hover:bg-cyan-100 dark:hover:bg-cyan-500/30 text-cyan-700 dark:text-cyan-300 text-xs font-semibold border border-cyan-200 dark:border-cyan-500/30 transition-all cursor-pointer"
-                title={`Download ${file.name}`}
+                title={`${t.common.download} ${file.name}`}
               >
                 <Download className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Download</span>
+                <span className="hidden sm:inline">{t.common.download}</span>
               </a>
             )}
 
@@ -282,7 +282,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
             <button
               onClick={handleClose}
               className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-white hover:bg-rose-50 dark:hover:bg-rose-500/20 transition-all cursor-pointer ml-1"
-              title="Tutup (Esc)"
+              title={t.videoModal.close}
             >
               <X className="w-4 h-4 sm:w-5 sm:h-5 text-slate-500 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400" />
             </button>

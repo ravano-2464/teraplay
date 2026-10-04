@@ -12,6 +12,7 @@ import {
   X,
   Loader2,
 } from "lucide-react";
+import { useI18n } from "@/context/I18nContext";
 
 interface YouTubeSearchSectionProps {
   onSearch: (query: string) => Promise<void>;
@@ -20,7 +21,7 @@ interface YouTubeSearchSectionProps {
 }
 
 const TRENDING_TAGS = [
-  { label: "🔥 Trending Hits", query: "Trending Musik Indonesia Hits Terbaru" },
+  { label: "🔥 Trending", query: "Trending Music Hits" },
   { label: "☕ Lofi Beats", query: "lofi hip hop radio beats to relax study to" },
   { label: "⚡ Phonk", query: "Phonk drift music playlist" },
   { label: "🇮🇩 Pop Indo", query: "Pop Indonesia terbaru populer" },
@@ -36,6 +37,7 @@ export const YouTubeSearchSection: React.FC<YouTubeSearchSectionProps> = ({
   isLoading,
   initialQuery = "",
 }) => {
+  const { t } = useI18n();
   const [query, setQuery] = useState(initialQuery);
   const [copiedSuccess, setCopiedSuccess] = useState(false);
 
@@ -83,14 +85,14 @@ export const YouTubeSearchSection: React.FC<YouTubeSearchSectionProps> = ({
                   <Youtube className="w-5 h-5" />
                 </div>
                 <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                  Full YouTube Mode
+                  {t.youtube.title}
                 </h2>
                 <span className="text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-red-500/15 dark:bg-red-500/25 text-red-600 dark:text-red-400 border border-red-500/30 flex items-center gap-1">
-                  <Zap className="w-3 h-3 fill-current" /> 100% Bebas Iklan
+                  <Zap className="w-3 h-3 fill-current" /> {t.youtube.badge}
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-                Cari judul lagu, nama artis, channel, atau paste link video YouTube untuk streaming audio/video tanpa iklan.
+                {t.youtube.subtitle}
               </p>
             </div>
 
@@ -98,7 +100,7 @@ export const YouTubeSearchSection: React.FC<YouTubeSearchSectionProps> = ({
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/20">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Audio Visualizer Ready</span>
+                <span>{t.youtube.visualizerReady}</span>
               </div>
             </div>
           </div>
@@ -114,7 +116,7 @@ export const YouTubeSearchSection: React.FC<YouTubeSearchSectionProps> = ({
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Ketik judul lagu, artis, atau paste link YouTube (contoh: Alan Walker - Faded / youtu.be/...)"
+                  placeholder={t.youtube.placeholder}
                   className="w-full pl-11 pr-28 py-3.5 rounded-2xl glass-input text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 border border-slate-300 dark:border-slate-700/80 focus:border-red-500 focus:ring-2 focus:ring-red-500/30 transition-all shadow-inner"
                   suppressHydrationWarning
                 />
@@ -140,12 +142,12 @@ export const YouTubeSearchSection: React.FC<YouTubeSearchSectionProps> = ({
                   {copiedSuccess ? (
                     <>
                       <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
-                      <span className="text-emerald-600 dark:text-emerald-400">Pasted</span>
+                      <span className="text-emerald-600 dark:text-emerald-400">{t.teraboxInput.pastedBtn}</span>
                     </>
                   ) : (
                     <>
                       <Clipboard className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Paste</span>
+                      <span>{t.teraboxInput.pasteBtn}</span>
                     </>
                   )}
                 </button>
@@ -160,12 +162,12 @@ export const YouTubeSearchSection: React.FC<YouTubeSearchSectionProps> = ({
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Mencari...</span>
+                    <span>{t.youtube.searchingBtn}</span>
                   </>
                 ) : (
                   <>
                     <Search className="w-4 h-4" />
-                    <span>Cari YouTube</span>
+                    <span>{t.youtube.searchBtn}</span>
                   </>
                 )}
               </button>
@@ -175,7 +177,7 @@ export const YouTubeSearchSection: React.FC<YouTubeSearchSectionProps> = ({
           {/* Quick Trending Tags */}
           <div className="flex flex-wrap items-center gap-1.5 pt-2">
             <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 flex items-center gap-1 mr-1">
-              <Flame className="w-3.5 h-3.5 text-amber-500" /> Cepat:
+              <Flame className="w-3.5 h-3.5 text-amber-500" /> {t.youtube.quickTags}
             </span>
             {TRENDING_TAGS.map((tag) => (
               <button
@@ -193,3 +195,4 @@ export const YouTubeSearchSection: React.FC<YouTubeSearchSectionProps> = ({
     </div>
   );
 };
+

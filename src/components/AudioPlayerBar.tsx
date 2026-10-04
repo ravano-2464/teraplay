@@ -33,6 +33,7 @@ import {
 import { AudioTrack, PlaybackMode } from "@/types/terabox";
 import { formatDuration } from "@/lib/formatters";
 import { AudioVisualizer } from "./AudioVisualizer";
+import { useI18n } from "../context/I18nContext";
 
 interface AudioPlayerBarProps {
   playlist: AudioTrack[];
@@ -71,6 +72,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   repeatMode,
   onToggleRepeat,
 }) => {
+  const { t } = useI18n();
   const mediaRef = useRef<HTMLVideoElement | null>(null);
   const ytIframeRef = useRef<HTMLIFrameElement | null>(null);
   const playPromiseRef = useRef<Promise<void> | null>(null);
@@ -985,7 +987,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                       </span>
                     ) : isYouTubeMode ? (
                       <span className="flex items-center gap-1 font-semibold text-rose-600 dark:text-rose-400 text-[10px] bg-rose-50 dark:bg-rose-500/15 px-1.5 py-0.2 rounded border border-rose-200 dark:border-rose-500/30">
-                        <ShieldCheck className="w-2.5 h-2.5 text-rose-500 dark:text-rose-400" /> YouTube Bebas Iklan
+                        <ShieldCheck className="w-2.5 h-2.5 text-rose-500 dark:text-rose-400" /> {t.player.adFreeTag}
                       </span>
                     ) : (
                       <span className="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400 text-[10px] bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-500/20">
@@ -1010,7 +1012,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                           : "bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/40 shadow-sm"
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80"
                     }`}
-                    title={activeShuffle ? "Acak Lagu (Shuffle): Aktif" : "Acak Lagu (Shuffle): Nonaktif"}
+                    title={activeShuffle ? t.player.shuffleOn : t.player.shuffleOff}
                   >
                     <Shuffle className="w-4 h-4" />
                     {activeShuffle && (
@@ -1026,7 +1028,6 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                   <button
                     onClick={onPrevTrack}
                     className="p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 active:scale-95 transition-all cursor-pointer"
-                    title="Track Sebelumnya"
                   >
                     <SkipBack className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
                   </button>
@@ -1039,7 +1040,6 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                         ? "bg-gradient-to-tr from-rose-500 to-red-500 shadow-rose-500/30 text-white"
                         : "bg-gradient-to-tr from-emerald-500 to-teal-400 shadow-emerald-500/30 text-slate-950"
                     } font-bold shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer`}
-                    title={isPlaying ? "Jeda (Pause)" : "Putar (Play)"}
                   >
                     {isBuffering ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -1054,7 +1054,6 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                   <button
                     onClick={onNextTrack}
                     className="p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 active:scale-95 transition-all cursor-pointer"
-                    title={activeShuffle ? "Track Acak Berikutnya" : "Track Berikutnya"}
                   >
                     <SkipForward className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
                   </button>
@@ -1071,10 +1070,10 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                     }`}
                     title={
                       activeRepeat === "one"
-                        ? "Ulangi 1 Lagu (Repeat One)"
+                        ? t.player.repeatOne
                         : activeRepeat === "all"
-                        ? "Ulangi Semua Lagu (Repeat All)"
-                        : "Putar Normal (No Repeat)"
+                        ? t.player.repeatAll
+                        : t.player.repeatOff
                     }
                   >
                     {activeRepeat === "one" ? (
@@ -1092,7 +1091,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                     className={`px-2 py-1 rounded-lg text-slate-600 dark:text-slate-400 ${
                       isYouTubeMode ? "hover:text-rose-600 dark:hover:text-rose-300" : "hover:text-emerald-600 dark:hover:text-emerald-300"
                     } hover:bg-slate-100 dark:hover:bg-slate-800/80 font-mono text-[10px] font-bold border border-slate-200 dark:border-slate-700/60 cursor-pointer`}
-                    title="Kecepatan Pemutaran (Speed)"
+                    title={t.player.speed}
                   >
                     {playbackRate}x
                   </button>

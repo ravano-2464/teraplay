@@ -41,6 +41,7 @@ import {
   Flame,
   Radio,
 } from "lucide-react";
+import { useI18n } from "@/context/I18nContext";
 
 const mapYouTubeResultToFile = (item: any): TeraBoxFile => ({
   id: `yt-${item.id}`,
@@ -64,6 +65,7 @@ const mapYouTubeResultToFile = (item: any): TeraBoxFile => ({
 });
 
 export default function Home() {
+  const { t } = useI18n();
   // App Mode: TeraBox Folder Inspector vs Full YouTube No-Ads
   const [appMode, setAppMode] = useState<"terabox" | "youtube">("terabox");
 
@@ -671,7 +673,7 @@ export default function Home() {
       />
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 w-full flex-1 flex flex-col gap-6">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-8 w-full flex-1 flex flex-col gap-4 sm:gap-6">
         {/* ========================================================= */}
         {/* YOUTUBE MODE VIEW                                         */}
         {/* ========================================================= */}
@@ -700,13 +702,13 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white flex items-center gap-2">
-                    <span>{ytQuery ? `Hasil Pencarian: "${ytQuery}"` : "🔥 Musik & Video Populer"}</span>
+                    <span>{ytQuery ? `${t.youtube.resultsTitle} "${ytQuery}"` : t.youtube.popularTitle}</span>
                     <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/5">
-                      {filteredAndSortedYtFiles.length} item
+                      {filteredAndSortedYtFiles.length} {t.youtube.itemsCount}
                     </span>
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Semua lagu dan video diputar langsung 100% bebas iklan dengan audio visualizer responsif.
+                    {t.youtube.adFreeNotice}
                   </p>
                 </div>
               </div>
@@ -719,10 +721,10 @@ export default function Home() {
                   onClick={handlePlayAllYouTube}
                   disabled={filteredAndSortedYtFiles.length === 0}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 shadow-md shadow-red-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
-                  title="Putar semua hasil dari atas ke bawah"
+                  title={t.youtube.playAll}
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>Putar Semua</span>
+                  <span>{t.youtube.playAll}</span>
                 </button>
 
                 {/* Shuffle All Audio */}
@@ -731,10 +733,10 @@ export default function Home() {
                   onClick={handleShuffleAllYouTube}
                   disabled={filteredAndSortedYtFiles.length === 0}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
-                  title="Putar acak (shuffle) semua hasil"
+                  title={t.youtube.shuffleAll}
                 >
                   <Shuffle className="w-3.5 h-3.5" />
-                  <span>Acak Semua</span>
+                  <span>{t.youtube.shuffleAll}</span>
                 </button>
 
                 {/* View Mode Toggle: Grid vs Table */}
@@ -773,11 +775,11 @@ export default function Home() {
                   size="sm"
                   minWidth="min-w-[170px]"
                   options={[
-                    { value: "default", label: "Urutan YouTube" },
-                    { value: "name-asc", label: "Judul (A - Z)" },
-                    { value: "name-desc", label: "Judul (Z - A)" },
-                    { value: "duration-desc", label: "Durasi Terpanjang" },
-                    { value: "duration-asc", label: "Durasi Terpendek" },
+                    { value: "default", label: t.statsHeader.sortDefault },
+                    { value: "name-asc", label: t.statsHeader.sortNameAsc },
+                    { value: "name-desc", label: t.statsHeader.sortNameDesc },
+                    { value: "duration-desc", label: t.statsHeader.sortDurationDesc },
+                    { value: "duration-asc", label: t.statsHeader.sortDurationAsc },
                   ]}
                 />
               </div>
@@ -788,10 +790,10 @@ export default function Home() {
               <div className="glass-panel rounded-3xl p-12 text-center flex flex-col items-center justify-center border border-slate-200/80 dark:border-white/5 bg-white/80 dark:bg-slate-950/60 shadow-lg">
                 <Loader2 className="w-8 h-8 animate-spin text-rose-500 mb-3" />
                 <h3 className="font-bold text-base text-slate-800 dark:text-slate-200">
-                  Mencari di YouTube (Bebas Iklan)...
+                  {t.youtube.searchingBanner}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Menyiapkan hasil streaming audio & video berkualitas tinggi.
+                  {t.youtube.searchingBannerSub}
                 </p>
               </div>
             )}
@@ -819,10 +821,10 @@ export default function Home() {
                         <thead>
                           <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/80 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                             <th className="py-3 pl-4 pr-2 w-12 text-center">#</th>
-                            <th className="py-3 px-3">Judul & Artis YouTube</th>
-                            <th className="py-3 px-3 hidden sm:table-cell">Kategori</th>
-                            <th className="py-3 px-3">Durasi</th>
-                            <th className="py-3 pr-4 pl-2 text-right">Aksi</th>
+                            <th className="py-3 px-3">{t.common.fileName}</th>
+                            <th className="py-3 px-3 hidden sm:table-cell">{t.common.category}</th>
+                            <th className="py-3 px-3">{t.common.duration}</th>
+                            <th className="py-3 pr-4 pl-2 text-right">{t.common.actions}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -861,17 +863,17 @@ export default function Home() {
                   <FileQuestion className="w-8 h-8" />
                 </div>
                 <h3 className="font-bold text-base text-slate-800 dark:text-slate-200">
-                  Tidak ada video yang ditemukan
+                  {t.youtube.emptyTitle}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
-                  Coba gunakan kata kunci pencarian yang lain atau pilih salah satu tag cepat di atas.
+                  {t.youtube.emptySubtitle}
                 </p>
                 <button
                   type="button"
                   onClick={() => handleSearchYouTube("")}
                   className="mt-4 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-transparent transition-all cursor-pointer shadow-sm"
                 >
-                  Tampilkan Lagu Populer
+                  {t.youtube.showPopular}
                 </button>
               </div>
             )}
@@ -900,12 +902,12 @@ export default function Home() {
                   <div>
                     <p className="font-bold text-slate-900 dark:text-white text-sm">
                       {cookieStatus === "expired"
-                        ? "Sesi Cookie ndus Kedaluwarsa (Expired)"
-                        : "Folder Private TeraBox (dm.terabox.com)"}
+                        ? t.common.cookieNoticeExpired
+                        : t.common.cookieNoticeTitle}
                     </p>
                     <p className="text-amber-700 dark:text-amber-300 text-xs mt-0.5">
                       {folderData.noticeMessage ||
-                        "Link ini adalah folder private TeraBox Anda. Untuk mengakses file dan streaming, hubungkan Cookie ndus yang aktif."}
+                        "Link ini adalah folder private TeraBox Anda. Hubungkan Cookie ndus yang aktif untuk mengakses file."}
                     </p>
                   </div>
                 </div>
@@ -913,7 +915,7 @@ export default function Home() {
                   onClick={() => setIsCookieModalOpen(true)}
                   className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-bold text-xs shadow-md transition-all cursor-pointer whitespace-nowrap self-end sm:self-auto"
                 >
-                  {cookieStatus === "expired" ? "Perbarui Cookie ndus" : "Hubungkan Cookie ndus"}
+                  {cookieStatus === "expired" ? t.common.cookieNoticeUpdate : t.common.cookieNoticeAction}
                 </button>
               </div>
             )}
@@ -926,10 +928,10 @@ export default function Home() {
                     <AlertCircle className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="font-bold text-rose-950 dark:text-white text-sm">Kendala API TeraBox</p>
+                    <p className="font-bold text-rose-950 dark:text-white text-sm">{t.common.apiNotice}</p>
                     <p className="text-rose-700 dark:text-rose-300 text-xs mt-0.5">{errorMessage}</p>
                     <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium mt-1">
-                      ⚡ Fitur YouTube Auto-Fallback aktif: Lagu yang error akan otomatis dicari dan diputar dari YouTube secara 100% Bebas Iklan.
+                      {t.common.fallbackNotice}
                     </p>
                   </div>
                 </div>
@@ -943,18 +945,18 @@ export default function Home() {
                   <FolderSearch className="w-8 h-8" />
                 </div>
                 <h3 className="font-black text-lg sm:text-xl text-slate-900 dark:text-white">
-                  Siap Menginspeksi Link TeraBox Anda
+                  {t.common.welcomeTitle}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-lg">
-                  Masukkan link share TeraBox (<code className="text-sky-600 dark:text-sky-300 font-mono">terabox.com/s/1xxxx</code>) atau link folder pribadi di kolom atas untuk melihat daftar file lengkap, rincian ukuran MB, serta memutar audio dan video secara langsung.
+                  {t.common.welcomeDesc}
                 </p>
                 <button
                   type="button"
                   onClick={() => setAppMode("youtube")}
                   className="mt-5 flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white font-bold text-xs shadow-lg shadow-red-500/25 transition-all cursor-pointer hover:scale-105 active:scale-95"
                 >
-                  <Youtube className="w-4 h-4 fill-current" />
-                  <span>Coba Full YouTube Mode (Bebas Iklan)</span>
+                  <Youtube className="w-4 h-4 text-white" />
+                  <span>{t.common.welcomeYtBtn}</span>
                 </button>
               </div>
             )}
@@ -1006,11 +1008,11 @@ export default function Home() {
                             <thead>
                               <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/80 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                 <th className="py-3 pl-4 pr-2 w-12 text-center">#</th>
-                                <th className="py-3 px-3">Nama File</th>
-                                <th className="py-3 px-3 hidden sm:table-cell">Format</th>
-                                <th className="py-3 px-3">Ukuran (MB)</th>
-                                <th className="py-3 px-3 hidden md:table-cell">Durasi</th>
-                                <th className="py-3 pr-4 pl-2 text-right">Aksi</th>
+                                <th className="py-3 px-3">{t.common.fileName}</th>
+                                <th className="py-3 px-3 hidden sm:table-cell">{t.common.format}</th>
+                                <th className="py-3 px-3">{t.common.size}</th>
+                                <th className="py-3 px-3 hidden md:table-cell">{t.common.duration}</th>
+                                <th className="py-3 pr-4 pl-2 text-right">{t.common.actions}</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -1066,10 +1068,9 @@ export default function Home() {
                     <div className="p-4 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-500 mb-3">
                       <FileQuestion className="w-8 h-8" />
                     </div>
-                    <h3 className="font-bold text-base text-slate-800 dark:text-slate-200">Tidak ada file yang cocok</h3>
+                    <h3 className="font-bold text-base text-slate-800 dark:text-slate-200">{t.common.noFilesFound}</h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
-                      Tidak ditemukan file untuk kategori <span className="text-sky-600 dark:text-sky-400 font-semibold">"{selectedCategory}"</span>
-                      {searchQuery ? ` dengan kata kunci "${searchQuery}"` : ""}.
+                      {searchQuery ? `"${searchQuery}"` : selectedCategory}
                     </p>
                     <button
                       onClick={() => {
@@ -1079,7 +1080,7 @@ export default function Home() {
                       }}
                       className="mt-4 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-transparent transition-all cursor-pointer shadow-sm"
                     >
-                      Reset Filter & Pencarian
+                      {t.common.resetFilter}
                     </button>
                   </div>
                 )}

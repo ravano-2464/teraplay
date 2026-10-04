@@ -14,6 +14,7 @@ import {
   Radio,
 } from "lucide-react";
 import { TeraBoxFile } from "@/types/terabox";
+import { useI18n } from "@/context/I18nContext";
 
 interface YouTubeTableRowProps {
   track: TeraBoxFile;
@@ -32,6 +33,7 @@ export const YouTubeTableRow: React.FC<YouTubeTableRowProps> = ({
   onOpenVideo,
   onAddToQueue,
 }) => {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const [queued, setQueued] = useState(false);
 
@@ -83,7 +85,7 @@ export const YouTubeTableRow: React.FC<YouTubeTableRowProps> = ({
                 onPlayAudio(track);
               }}
               className="hidden group-hover:flex items-center justify-center w-6 h-6 rounded-lg bg-rose-500 text-white cursor-pointer hover:bg-rose-600 transition-colors shadow-sm"
-              title="Putar Audio"
+              title={t.youtube.playAudio}
             >
               <Play className="w-3 h-3 fill-current ml-0.5" />
             </button>
@@ -148,7 +150,7 @@ export const YouTubeTableRow: React.FC<YouTubeTableRowProps> = ({
               onPlayAudio(track);
             }}
             className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/20 transition-colors cursor-pointer"
-            title={isCurrentlyPlaying ? "Jeda" : "Putar Audio (Bebas Iklan)"}
+            title={isCurrentlyPlaying ? t.common.actions : t.youtube.playAudio}
           >
             {isCurrentlyPlaying ? (
               <Pause className="w-4 h-4 text-rose-500 fill-current" />
@@ -162,7 +164,7 @@ export const YouTubeTableRow: React.FC<YouTubeTableRowProps> = ({
               type="button"
               onClick={handleQueue}
               className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              title="Tambah ke Antrean Playlist"
+              title={t.youtube.addToQueue}
             >
               {queued ? <Check className="w-4 h-4 text-emerald-500" /> : <Plus className="w-4 h-4" />}
             </button>
@@ -175,7 +177,7 @@ export const YouTubeTableRow: React.FC<YouTubeTableRowProps> = ({
               onOpenVideo(track);
             }}
             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            title="Tonton Video (Bebas Iklan)"
+            title={t.youtube.watchVideo}
           >
             <Film className="w-4 h-4" />
           </button>
@@ -184,7 +186,7 @@ export const YouTubeTableRow: React.FC<YouTubeTableRowProps> = ({
             type="button"
             onClick={handleCopy}
             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            title="Salin Link YouTube"
+            title={t.youtube.copyLink}
           >
             {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
           </button>
@@ -196,7 +198,7 @@ export const YouTubeTableRow: React.FC<YouTubeTableRowProps> = ({
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
               className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              title="Buka di YouTube"
+              title={t.youtube.openYouTube}
             >
               <ExternalLink className="w-4 h-4" />
             </a>
@@ -206,3 +208,4 @@ export const YouTubeTableRow: React.FC<YouTubeTableRowProps> = ({
     </tr>
   );
 };
+

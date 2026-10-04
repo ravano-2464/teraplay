@@ -1,0 +1,159 @@
+export type LanguageKey =
+  | "indonesian"
+  | "japanese"
+  | "italian"
+  | "spanish"
+  | "dutch"
+  | "german"
+  | "french"
+  | "russian"
+  | "malay"
+  | "chinese"
+  | "english";
+
+export interface LanguageMeta {
+  key: LanguageKey;
+  label: string;
+  nativeName: string;
+  flag: string;
+  shortCode: string;
+}
+
+export interface Translations {
+  nav: {
+    teraboxMode: string;
+    youtubeMode: string;
+    folderLabel: string;
+    audioActive: string;
+    cookieValid: string;
+    cookieExpired: string;
+    cookieConnected: string;
+    setCookie: string;
+    themeLight: string;
+    themeDark: string;
+    themeSystem: string;
+    language: string;
+  };
+  teraboxInput: {
+    title: string;
+    subtitle: string;
+    pasteManual: string;
+    autoDetect: string;
+    placeholder: string;
+    pasteBtn: string;
+    pastedBtn: string;
+    inspectBtn: string;
+    inspectingBtn: string;
+    quickSamples: string;
+    sampleMusic: string;
+    sampleVideo: string;
+    sampleDrive: string;
+    manualModalTitle: string;
+    manualModalDesc: string;
+    manualModalPlaceholder: string;
+    manualModalCancel: string;
+    manualModalSubmit: string;
+  };
+  youtube: {
+    title: string;
+    badge: string;
+    subtitle: string;
+    placeholder: string;
+    searchBtn: string;
+    searchingBtn: string;
+    visualizerReady: string;
+    quickTags: string;
+    resultsTitle: string;
+    popularTitle: string;
+    itemsCount: string;
+    adFreeNotice: string;
+    playAll: string;
+    shuffleAll: string;
+    playAudio: string;
+    playing: string;
+    watchVideo: string;
+    addToQueue: string;
+    copyLink: string;
+    openYouTube: string;
+    emptyTitle: string;
+    emptySubtitle: string;
+    showPopular: string;
+    searchingBanner: string;
+    searchingBannerSub: string;
+  };
+  statsHeader: {
+    totalFiles: string;
+    totalSize: string;
+    audioCount: string;
+    videoCount: string;
+    otherCount: string;
+    filterAll: string;
+    filterAudio: string;
+    filterVideo: string;
+    filterImage: string;
+    filterDoc: string;
+    filterArchive: string;
+    searchPlaceholder: string;
+    sortDefault: string;
+    sortNameAsc: string;
+    sortNameDesc: string;
+    sortSizeDesc: string;
+    sortSizeAsc: string;
+    sortDurationDesc: string;
+    sortDurationAsc: string;
+    playAllAudio: string;
+    shuffleAllAudio: string;
+    itemsFound: string;
+  };
+  player: {
+    nowPlaying: string;
+    queue: string;
+    clearQueue: string;
+    emptyQueue: string;
+    speed: string;
+    repeatAll: string;
+    repeatOne: string;
+    repeatOff: string;
+    shuffleOn: string;
+    shuffleOff: string;
+    adFreeTag: string;
+    openVideo: string;
+    closePlayer: string;
+  };
+  videoModal: {
+    title: string;
+    adFreeVideo: string;
+    close: string;
+  };
+  pagination: {
+    showing: string;
+    of: string;
+    items: string;
+    perPage: string;
+    prev: string;
+    next: string;
+    all: string;
+  };
+  common: {
+    welcomeTitle: string;
+    welcomeDesc: string;
+    welcomeYtBtn: string;
+    noFilesFound: string;
+    resetFilter: string;
+    copyLink: string;
+    copied: string;
+    download: string;
+    format: string;
+    size: string;
+    duration: string;
+    actions: string;
+    fileName: string;
+    category: string;
+    apiNotice: string;
+    fallbackNotice: string;
+    cookieNoticeTitle: string;
+    cookieNoticeExpired: string;
+    cookieNoticeAction: string;
+    cookieNoticeUpdate: string;
+  };
+}

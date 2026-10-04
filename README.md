@@ -24,7 +24,8 @@ This application provides a seamless, dark-mode glassmorphic interface for disco
 5. **Precision Storage Capacity Analysis**: Exact file size calculations formatted in MB and GB, aggregated folder metrics, and real-time category distribution breakdowns (Audio, Video, Images, Documents, Archives).
 6. **Dual-View Exploration & Live Search**: Smooth toggle between structured **Table List View** and responsive **Glassmorphic Card Grid View**, accompanied by real-time keyword search and category filtering.
 7. **🌗 Light & Dark Theme System**: 1-click theme switcher supporting Dark Mode, Light Mode, and System Default with high-contrast glassmorphism.
-8. **Built-in Proxy Stream Engine**: Next.js server-side API proxy routes that bypass CORS restrictions, handle range headers for smooth scrubbing, and deliver optimized multimedia streaming pipelines.
+8. **🌐 Multi-Language (i18n) Support (11 Languages)**: Dynamic language switcher supporting 11 international languages (Indonesian, Japanese, Italian, Spanish, Dutch, German, French, Russian, Malay, China, and English) with modular folder structure under `src/i18n/`.
+9. **Built-in Proxy Stream Engine**: Next.js server-side API proxy routes that bypass CORS restrictions, handle range headers for smooth scrubbing, and deliver optimized multimedia streaming pipelines.
 
 ---
 
@@ -108,8 +109,10 @@ graph TD
 │   │   ├── 📄 CustomSelect.tsx
 │   │   ├── 📄 FileCard.tsx
 │   │   ├── 📄 FileTableRow.tsx
+│   │   ├── 📄 FlagIcon.tsx
 │   │   ├── 📄 FolderStatsHeader.tsx
 │   │   ├── 📄 FolderTree.tsx
+│   │   ├── 📄 LanguageSelector.tsx
 │   │   ├── 📄 LinkInputSection.tsx
 │   │   ├── 📄 Navbar.tsx
 │   │   ├── 📄 Pagination.tsx
@@ -119,7 +122,33 @@ graph TD
 │   │   ├── 📄 YouTubeSearchSection.tsx
 │   │   └── 📄 YouTubeTableRow.tsx
 │   ├── 📁 context
+│   │   ├── 📄 I18nContext.tsx
 │   │   └── 📄 ThemeContext.tsx
+│   ├── 📁 i18n
+│   │   ├── 📁 chinese
+│   │   │   └── 📄 index.ts
+│   │   ├── 📁 dutch
+│   │   │   └── 📄 index.ts
+│   │   ├── 📁 english
+│   │   │   └── 📄 index.ts
+│   │   ├── 📁 french
+│   │   │   └── 📄 index.ts
+│   │   ├── 📁 german
+│   │   │   └── 📄 index.ts
+│   │   ├── 📁 indonesian
+│   │   │   └── 📄 index.ts
+│   │   ├── 📁 italian
+│   │   │   └── 📄 index.ts
+│   │   ├── 📁 japanese
+│   │   │   └── 📄 index.ts
+│   │   ├── 📁 malay
+│   │   │   └── 📄 index.ts
+│   │   ├── 📁 russian
+│   │   │   └── 📄 index.ts
+│   │   ├── 📁 spanish
+│   │   │   └── 📄 index.ts
+│   │   ├── 📄 index.ts
+│   │   └── 📄 types.ts
 │   ├── 📁 lib
 │   │   ├── 📄 dlinkCache.ts
 │   │   ├── 📄 formatters.ts
