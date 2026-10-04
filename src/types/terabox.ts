@@ -28,6 +28,16 @@ export interface TeraBoxFile {
   youtubeThumbnail?: string;
 }
 
+export interface AccountQuota {
+  total: number;
+  used: number;
+  free: number;
+  formattedTotal: string;
+  formattedUsed: string;
+  formattedFree: string;
+  percentageUsed: number;
+}
+
 export interface FolderStats {
   totalFiles: number;
   totalFolders: number;
@@ -41,6 +51,7 @@ export interface FolderStats {
   hasAudio: boolean;
   hasVideo: boolean;
   primaryCategory: FileCategory;
+  accountQuota?: AccountQuota;
 }
 
 export interface TeraBoxFolderResult {
@@ -62,6 +73,7 @@ export interface TeraBoxFolderResult {
   requiresCookie?: boolean;
   noticeMessage?: string;
   error?: string;
+  accountQuota?: AccountQuota;
 }
 
 export interface AudioTrack extends TeraBoxFile {

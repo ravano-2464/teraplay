@@ -196,10 +196,21 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
                 <HardDrive className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">Total Kapasitas</p>
-                <p className="text-base sm:text-lg font-black text-emerald-300 tracking-tight">
-                  {stats.formattedTotalSize}
+                <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">
+                  {folderData.accountQuota && (folderData.folderPath === "/" || stats.totalFiles === 0)
+                    ? `Storage Akun (${folderData.accountQuota.percentageUsed}% Terpakai)`
+                    : "Total Kapasitas"}
                 </p>
+                <p className="text-base sm:text-lg font-black text-emerald-300 tracking-tight">
+                  {folderData.accountQuota && (folderData.folderPath === "/" || stats.totalFiles === 0)
+                    ? folderData.accountQuota.formattedUsed
+                    : stats.formattedTotalSize}
+                </p>
+                {folderData.accountQuota && (folderData.folderPath === "/" || stats.totalFiles === 0) && (
+                  <p className="text-[10px] text-slate-400 font-mono">
+                    Total: {folderData.accountQuota.formattedTotal}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -209,9 +220,13 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
                 <Folder className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">Jumlah File</p>
+                <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">
+                  {stats.totalFiles === 0 && stats.totalFolders > 0 ? "Struktur Folder" : "Jumlah File"}
+                </p>
                 <p className="text-base sm:text-lg font-black text-sky-300 tracking-tight">
-                  {stats.totalFiles} File {stats.totalFolders > 0 ? `(${stats.totalFolders} Subfolder)` : ""}
+                  {stats.totalFiles === 0 && stats.totalFolders > 0
+                    ? `${stats.totalFolders} Subfolder`
+                    : `${stats.totalFiles} File ${stats.totalFolders > 0 ? `(${stats.totalFolders} Subfolder)` : ""}`}
                 </p>
               </div>
             </div>
@@ -226,6 +241,20 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Root Drive Navigation Guide Banner when in Root */}
+        {(folderData.folderPath === "/" || folderData.folderPath === "") && stats.totalFolders > 0 && stats.totalFiles === 0 && (
+          <div className="mt-4 p-3.5 rounded-2xl bg-gradient-to-r from-sky-950/60 via-slate-900/80 to-indigo-950/50 border border-sky-500/30 text-xs text-sky-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 rounded-xl bg-sky-500/20 text-sky-400 border border-sky-500/30 shrink-0">
+                <Folder className="w-4 h-4" />
+              </div>
+              <p className="text-slate-300 text-xs leading-relaxed">
+                <span className="font-bold text-white">Anda berada di Root Drive (/).</span> Seluruh data tersimpan di dalam <span className="text-sky-300 font-semibold">{stats.totalFolders} Subfolder</span> di bawah. Klik subfolder (seperti <span className="text-sky-300 font-mono font-semibold">RAVANO MUSIC</span>, <span className="text-sky-300 font-mono font-semibold">FILM</span>, dll.) untuk membuka daftar file dan memutar audio/video.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Audio Folder Detected Announcement Bar */}
         {stats.hasAudio && (

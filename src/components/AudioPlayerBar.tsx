@@ -87,6 +87,9 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   // Dynamic Real-time Rhythm Beat heights for thumbnail equalizer
   const [beatHeights, setBeatHeights] = useState<number[]>([4, 8, 5]);
 
+  // Persistent Playback Source Mode: "terabox" | "youtube"
+  const [playbackSourceMode, setPlaybackSourceMode] = useState<"terabox" | "youtube">("terabox");
+
   // YouTube Fallback State
   const [ytTrack, setYtTrack] = useState<{
     id: string;
@@ -98,15 +101,23 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   const [isSearchingFallback, setIsSearchingFallback] = useState(false);
   const [isFallbackActive, setIsFallbackActive] = useState(false);
 
-  // Synchronize current track and reset fallback when new track is clicked
+  // Synchronize current track and preserve active mode (stay in YouTube mode until user switches back)
   useEffect(() => {
-    setVideoPos({ x: 0, y: 0 });
     setCurrentTime(0);
     setHasError(false);
     setErrorMessage(null);
 
+    // If currentTrack explicitly requested YouTube mode
     if (currentTrack?.youtubeId || currentTrack?.isYoutubeFallback) {
-      if (currentTrack.youtubeId) {
+      setPlaybackSourceMode("youtube");
+      setIsFallbackActive(true);
+    }
+
+    const isCurrentYouTube = playbackSourceMode === "youtube" || currentTrack?.youtubeId || currentTrack?.isYoutubeFallback;
+
+    if (isCurrentYouTube) {
+      setIsFallbackActive(true);
+      if (currentTrack?.youtubeId) {
         setYtTrack({
           id: currentTrack.youtubeId,
           title: currentTrack.youtubeTitle || currentTrack.name,
@@ -114,23 +125,22 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
           duration: currentTrack.duration,
           thumbnailUrl: currentTrack.youtubeThumbnail || currentTrack.thumbnailUrl,
         });
-        setIsFallbackActive(true);
         setIsBuffering(false);
         setDuration(currentTrack.duration || 0);
-      } else {
-        // Track marked for YouTube fallback but video ID is still being fetched
-        setIsFallbackActive(true);
-        setIsBuffering(true);
+      } else if (currentTrack) {
+        // In YouTube mode: stay in YouTube mode for the new song and resolve YouTube track!
         setYtTrack(null);
+        setIsBuffering(true);
+        triggerYouTubeFallback();
       }
     } else {
       setYtTrack(null);
       setIsFallbackActive(false);
       setDuration(currentTrack?.duration || 0);
     }
-  }, [currentTrack?.id, currentTrack?.youtubeId, currentTrack?.isYoutubeFallback]);
+  }, [currentTrack?.id, currentTrack?.youtubeId, currentTrack?.isYoutubeFallback, playbackSourceMode]);
 
-  const isYouTubeMode = Boolean(isFallbackActive && (ytTrack?.id || currentTrack?.youtubeId));
+  const isYouTubeMode = Boolean(playbackSourceMode === "youtube" || isFallbackActive);
   const activeYtId = ytTrack?.id || currentTrack?.youtubeId;
 
   // Real-time animation loop for Album Equalizer Bars (following musical rhythm)
@@ -261,9 +271,11 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   const triggerYouTubeFallback = useCallback(async () => {
     if (!currentTrack || isSearchingFallback) return;
 
+    setPlaybackSourceMode("youtube");
+    setIsFallbackActive(true);
     setIsSearchingFallback(true);
     setIsBuffering(true);
-    setErrorMessage("Stream TeraBox bermasalah. Mengalihkan otomatis ke YouTube Bebas Iklan...");
+    setErrorMessage("Mencari lagu di YouTube Bebas Iklan...");
 
     try {
       const res = await fetch(
@@ -595,11 +607,16 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   };
 
   const handleSwitchToTeraBox = () => {
+    setPlaybackSourceMode("terabox");
     setIsFallbackActive(false);
     setYtTrack(null);
     setCurrentTime(0);
     setHasError(false);
     setErrorMessage(null);
+    if (currentTrack) {
+      currentTrack.isYoutubeFallback = false;
+      currentTrack.sourceType = "terabox-live";
+    }
   };
 
   if (!currentTrack) return null;
@@ -1064,13 +1081,13 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                   </button>
                 )}
 
-                {/* Mini Rhythm-Reactive Visualizer in deck */}
-                <div className="hidden lg:block w-24">
+                {/* High-Energy Rhythm Visualizer in deck */}
+                <div className="hidden lg:block w-28 xl:w-32 h-8 shrink-0">
                   <AudioVisualizer
                     isPlaying={isPlaying && !isBuffering && !hasError}
                     audioElement={mediaRef.current}
-                    barCount={16}
-                    height={26}
+                    barCount={18}
+                    height={30}
                     theme={isYouTubeMode ? "rose" : "emerald"}
                     showPeaks={true}
                   />

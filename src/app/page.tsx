@@ -569,7 +569,15 @@ export default function Home() {
             {/* Subfolders if any */}
             {folderData.folders && folderData.folders.length > 0 && (
               <FolderTree
-                folders={folderData.folders}
+                folders={
+                  searchQuery.trim()
+                    ? folderData.folders.filter(
+                        (f) =>
+                          f.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+                          f.path.toLowerCase().includes(searchQuery.toLowerCase().trim())
+                      )
+                    : folderData.folders
+                }
                 onOpenFolder={handleOpenFolder}
               />
             )}

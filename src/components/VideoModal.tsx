@@ -37,17 +37,15 @@ export const VideoModal: React.FC<VideoModalProps> = ({
   const [isSearchingFallback, setIsSearchingFallback] = useState(false);
   const [fallbackNotice, setFallbackNotice] = useState<string | null>(null);
 
-  // Reset position & fallback when a new file is opened
+  // Update fallback info when a new file is opened (preserve user-dragged modal position)
   useEffect(() => {
-    setPosition({ x: 0, y: 0 });
-    setIsMaximized(false);
     setFallbackNotice(null);
     if (file?.youtubeId) {
       setYtFallbackTrack({ id: file.youtubeId, title: file.youtubeTitle || file.name, channel: file.youtubeChannel });
     } else {
       setYtFallbackTrack(null);
     }
-  }, [file?.id, file?.youtubeId]);
+  }, [file?.id, file?.youtubeId, file?.youtubeTitle, file?.youtubeChannel, file?.name]);
 
   const handleClose = () => {
     if (videoRef.current) {

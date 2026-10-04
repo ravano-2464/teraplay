@@ -1,4 +1,4 @@
-import { TeraBoxFile, TeraBoxFolderResult, FolderStats } from "@/types/terabox";
+import { TeraBoxFile, TeraBoxFolderResult, FolderStats, AccountQuota } from "@/types/terabox";
 import { formatBytes, formatDuration, detectFileCategory } from "./formatters";
 import { setCachedDlink } from "./dlinkCache";
 
@@ -75,7 +75,12 @@ export function parseTeraBoxUrl(inputUrl: string): ParsedTeraBoxInput {
 /**
  * Calculate statistical overview for a list of files
  */
-export function calculateFolderStats(files: TeraBoxFile[], foldersCount: number = 0): FolderStats {
+export function calculateFolderStats(
+  files: TeraBoxFile[],
+  foldersCount: number = 0,
+  accountQuota?: AccountQuota,
+  isRoot: boolean = false
+): FolderStats {
   let totalSize = 0;
   let audioCount = 0;
   let videoCount = 0;
@@ -109,11 +114,18 @@ export function calculateFolderStats(files: TeraBoxFile[], foldersCount: number 
     primaryCategory = counts[0].cat;
   }
 
+  let formattedTotalSize = formatBytes(totalSize);
+  if (isRoot && accountQuota) {
+    formattedTotalSize = `${accountQuota.formattedUsed} / ${accountQuota.formattedTotal}`;
+  } else if (totalSize === 0 && accountQuota && foldersCount > 0) {
+    formattedTotalSize = `${accountQuota.formattedUsed} Digunakan`;
+  }
+
   return {
     totalFiles: files.length,
     totalFolders: foldersCount,
-    totalSize,
-    formattedTotalSize: formatBytes(totalSize),
+    totalSize: isRoot && accountQuota && totalSize === 0 ? accountQuota.used : totalSize,
+    formattedTotalSize,
     audioCount,
     videoCount,
     imageCount,
@@ -122,6 +134,7 @@ export function calculateFolderStats(files: TeraBoxFile[], foldersCount: number 
     hasAudio,
     hasVideo,
     primaryCategory,
+    accountQuota,
   };
 }
 
@@ -153,8 +166,42 @@ export async function resolveTeraBoxFolder(inputUrl: string, ndusCookie?: string
     if (ndusCookie && ndusCookie.trim()) {
       const cleanCookie = formatNdusCookie(ndusCookie);
       let authFailed = false;
+      let accountQuota: AccountQuota | undefined = undefined;
 
       try {
+        // Fetch Real TeraBox Account Storage Quota
+        try {
+          const quotaUrl = "https://dm.terabox.com/api/quota?checkexpire=1&checkfree=1&app_id=250528&web=1&channel=dubox&clienttype=0";
+          const quotaRes = await fetch(quotaUrl, {
+            headers: {
+              "Cookie": cleanCookie,
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+              "Referer": "https://dm.terabox.com/main",
+              "Accept": "application/json, text/plain, */*",
+            },
+            signal: AbortSignal.timeout(4000),
+          });
+          if (quotaRes.ok) {
+            const quotaData = await quotaRes.json();
+            if (quotaData && quotaData.errno === 0 && typeof quotaData.total === "number") {
+              const total = Number(quotaData.total);
+              const used = Number(quotaData.used || 0);
+              const free = Number(quotaData.free || Math.max(0, total - used));
+              accountQuota = {
+                total,
+                used,
+                free,
+                formattedTotal: formatBytes(total),
+                formattedUsed: formatBytes(used),
+                formattedFree: formatBytes(free),
+                percentageUsed: total > 0 ? Math.round((used / total) * 100) : 0,
+              };
+            }
+          }
+        } catch {
+          // non-blocking
+        }
+
         let rawFiles: any[] = [];
         const targetPath = requestedPath.startsWith("/") ? requestedPath : `/${requestedPath}`;
         let page = 1;
@@ -319,7 +366,8 @@ export async function resolveTeraBoxFolder(inputUrl: string, ndusCookie?: string
             }
           });
 
-          const stats = calculateFolderStats(files, folders.length);
+          const isRoot = activePath === "/" || activePath === "";
+          const stats = calculateFolderStats(files, folders.length, accountQuota, isRoot);
 
           return {
             folderName: folderTitle,
@@ -331,6 +379,7 @@ export async function resolveTeraBoxFolder(inputUrl: string, ndusCookie?: string
             isAudioFolder: stats.audioCount > 0,
             source: "direct-api",
             requiresCookie: false,
+            accountQuota,
           };
         }
 
