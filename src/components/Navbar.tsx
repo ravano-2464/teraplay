@@ -17,6 +17,7 @@ import {
   HelpCircle,
   Youtube,
   Zap,
+  History,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageSelector } from "./LanguageSelector";
@@ -34,6 +35,8 @@ interface NavbarProps {
   onToggleCookieModal?: (open: boolean) => void;
   appMode?: "terabox" | "youtube";
   onModeChange?: (mode: "terabox" | "youtube") => void;
+  historyCount?: number;
+  onOpenHistory?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -48,6 +51,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleCookieModal,
   appMode = "terabox",
   onModeChange,
+  historyCount = 0,
+  onOpenHistory,
 }) => {
   const { t } = useI18n();
   const [internalModalOpen, setInternalModalOpen] = useState(false);
@@ -201,8 +206,25 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           </div>
 
-          {/* Action Tools (Language, Theme, Cookie) */}
+          {/* Action Tools (History, Language, Theme, Cookie) */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0 z-10 ml-auto">
+            {/* Watch History Trigger Button */}
+            <button
+              type="button"
+              suppressHydrationWarning
+              onClick={onOpenHistory}
+              className="btn-icon btn-icon-wiggle flex items-center gap-1.5 text-xs font-semibold px-2 sm:px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700/60 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm transition-all"
+              title={t.nav.history || "Riwayat Tontonan"}
+            >
+              <History className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
+              <span className="hidden sm:inline">{t.nav.history || "Riwayat"}</span>
+              {historyCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30">
+                  {historyCount > 99 ? "99+" : historyCount}
+                </span>
+              )}
+            </button>
+
             {/* Language Selector */}
             <LanguageSelector />
 

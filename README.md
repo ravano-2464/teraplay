@@ -118,12 +118,15 @@ graph TD
 │   │   ├── 📄 Pagination.tsx
 │   │   ├── 📄 ThemeToggle.tsx
 │   │   ├── 📄 VideoModal.tsx
+│   │   ├── 📄 WatchHistoryModal.tsx
 │   │   ├── 📄 YouTubeCard.tsx
 │   │   ├── 📄 YouTubeSearchSection.tsx
 │   │   └── 📄 YouTubeTableRow.tsx
 │   ├── 📁 context
 │   │   ├── 📄 I18nContext.tsx
 │   │   └── 📄 ThemeContext.tsx
+│   ├── 📁 hooks
+│   │   └── 📄 useWatchHistory.ts
 │   ├── 📁 i18n
 │   │   ├── 📁 chinese
 │   │   │   └── 📄 index.ts
@@ -154,9 +157,11 @@ graph TD
 │   │   ├── 📄 formatters.ts
 │   │   ├── 📄 sampleData.ts
 │   │   ├── 📄 teraboxParser.ts
+│   │   ├── 📄 watchHistory.ts
 │   │   └── 📄 youtubeSearch.ts
 │   └── 📁 types
-│       └── 📄 terabox.ts
+│       ├── 📄 terabox.ts
+│       └── 📄 watchHistory.ts
 ├── ⚙️ .gitignore
 ├── 📝 README.md
 ├── 📄 next.config.mjs

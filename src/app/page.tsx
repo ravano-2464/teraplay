@@ -13,10 +13,13 @@ import { FileTableRow } from "@/components/FileTableRow";
 import { FolderTree } from "@/components/FolderTree";
 import { AudioPlayerBar } from "@/components/AudioPlayerBar";
 import { VideoModal } from "@/components/VideoModal";
+import { WatchHistoryModal } from "@/components/WatchHistoryModal";
 import { CustomSelect } from "@/components/CustomSelect";
 import { TeraBoxFolderResult, TeraBoxFile, AudioTrack } from "@/types/terabox";
 import { detectFileCategory, formatBytes, formatDuration } from "@/lib/formatters";
 import { calculateFolderStats } from "@/lib/teraboxParser";
+import { useWatchHistory } from "@/hooks/useWatchHistory";
+import { updateHistoryItemDuration } from "@/lib/watchHistory";
 import {
   Music,
   FolderOpen,
@@ -92,6 +95,16 @@ export default function Home() {
   const [ytItemsPerPage, setYtItemsPerPage] = useState(24);
   const [ytSortBy, setYtSortBy] = useState("default");
 
+  // Watch History State & Hook
+  const {
+    history: watchHistoryList,
+    historyCount,
+    addToHistory,
+    removeFromHistory,
+    clearHistory,
+  } = useWatchHistory();
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+
   // Audio Player State (Shared between TeraBox and YouTube modes)
   const [currentTrack, setCurrentTrack] = useState<AudioTrack | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -142,6 +155,7 @@ export default function Home() {
   const handleUpdateFileDuration = useCallback((fileId: string, durationInSeconds: number) => {
     if (!durationInSeconds || isNaN(durationInSeconds) || durationInSeconds <= 0) return;
     const rounded = Math.round(durationInSeconds);
+    updateHistoryItemDuration(fileId, rounded);
 
     setFolderData((prev) => {
       if (!prev) return prev;
@@ -389,10 +403,12 @@ export default function Home() {
   const handleOpenVideo = (file: TeraBoxFile) => {
     setIsPlaying(false);
     setSelectedVideo(file);
+    addToHistory(file, "video");
   };
 
   const handlePlayAudio = (file: TeraBoxFile) => {
     setSelectedVideo(null);
+    addToHistory(file, "audio");
 
     if (appMode === "terabox" && folderData) {
       const audioFiles = folderData.files.filter((f) => f.category === "audio" || f.extension === "mp4");
@@ -418,6 +434,7 @@ export default function Home() {
 
   const handlePlayYouTube = async (file: TeraBoxFile) => {
     setSelectedVideo(null);
+    addToHistory(file, "audio");
 
     if (folderData) {
       const audioFiles = folderData.files.filter((f) => f.category === "audio" || f.extension === "mp4");
@@ -456,6 +473,7 @@ export default function Home() {
           formattedDuration: data.track.formattedDuration || file.formattedDuration,
         };
         setCurrentTrack(fullTrack);
+        addToHistory(fullTrack, "audio");
         if (data.track.duration) {
           handleUpdateFileDuration(file.id, data.track.duration);
         }
@@ -482,6 +500,7 @@ export default function Home() {
       setCurrentTrack(audioFiles[0] as AudioTrack);
       setPlaybackHistory([audioFiles[0].id]);
       setIsPlaying(true);
+      addToHistory(audioFiles[0], "audio");
     }
   };
 
@@ -496,6 +515,7 @@ export default function Home() {
       setCurrentTrack(chosen);
       setPlaybackHistory([chosen.id]);
       setIsPlaying(true);
+      addToHistory(chosen, "audio");
     }
   };
 
@@ -507,6 +527,7 @@ export default function Home() {
     setCurrentTrack(filteredAndSortedYtFiles[0] as AudioTrack);
     setPlaybackHistory([filteredAndSortedYtFiles[0].id]);
     setIsPlaying(true);
+    addToHistory(filteredAndSortedYtFiles[0], "audio");
   };
 
   const handleShuffleAllYouTube = () => {
@@ -518,6 +539,31 @@ export default function Home() {
     setCurrentTrack(chosen);
     setPlaybackHistory([chosen.id]);
     setIsPlaying(true);
+    addToHistory(chosen, "audio");
+  };
+
+  // Watch History Play All & Shuffle All
+  const handlePlayAllHistory = (items: TeraBoxFile[]) => {
+    if (!items || items.length === 0) return;
+    setPlaylist(items as AudioTrack[]);
+    setIsShuffle(false);
+    const first = items[0] as AudioTrack;
+    setCurrentTrack(first);
+    setPlaybackHistory([first.id]);
+    setIsPlaying(true);
+    addToHistory(first, first.category === "video" ? "video" : "audio");
+  };
+
+  const handleShuffleAllHistory = (items: TeraBoxFile[]) => {
+    if (!items || items.length === 0) return;
+    setPlaylist(items as AudioTrack[]);
+    setIsShuffle(true);
+    const randomIdx = Math.floor(Math.random() * items.length);
+    const chosen = items[randomIdx] as AudioTrack;
+    setCurrentTrack(chosen);
+    setPlaybackHistory([chosen.id]);
+    setIsPlaying(true);
+    addToHistory(chosen, chosen.category === "video" ? "video" : "audio");
   };
 
   const handleNextTrack = () => {
@@ -527,6 +573,7 @@ export default function Home() {
       if (playlist.length === 1) {
         setCurrentTrack(playlist[0]);
         setIsPlaying(true);
+        addToHistory(playlist[0], playlist[0].category === "video" ? "video" : "audio");
         return;
       }
 
@@ -542,18 +589,22 @@ export default function Home() {
       setPlaybackHistory((prev) => [...prev.slice(-50), currentTrack.id]);
       setCurrentTrack(randomTrack);
       setIsPlaying(true);
+      addToHistory(randomTrack, randomTrack.category === "video" ? "video" : "audio");
     } else {
       const currentIndex = playlist.findIndex((t) => t.id === currentTrack.id);
       if (currentIndex === -1) {
         setCurrentTrack(playlist[0]);
         setIsPlaying(true);
+        addToHistory(playlist[0], playlist[0].category === "video" ? "video" : "audio");
       } else if (repeatMode === "off" && currentIndex === playlist.length - 1) {
         setIsPlaying(false);
       } else {
         const nextIndex = (currentIndex + 1) % playlist.length;
+        const nextTrack = playlist[nextIndex];
         setPlaybackHistory((prev) => [...prev.slice(-50), currentTrack.id]);
-        setCurrentTrack(playlist[nextIndex]);
+        setCurrentTrack(nextTrack);
         setIsPlaying(true);
+        addToHistory(nextTrack, nextTrack.category === "video" ? "video" : "audio");
       }
     }
   };
@@ -568,14 +619,17 @@ export default function Home() {
       if (prevTrack) {
         setCurrentTrack(prevTrack);
         setIsPlaying(true);
+        addToHistory(prevTrack, prevTrack.category === "video" ? "video" : "audio");
         return;
       }
     }
 
     const currentIndex = playlist.findIndex((t) => t.id === currentTrack.id);
     const prevIndex = (currentIndex - 1 + playlist.length) % playlist.length;
-    setCurrentTrack(playlist[prevIndex]);
+    const prevTrack = playlist[prevIndex];
+    setCurrentTrack(prevTrack);
     setIsPlaying(true);
+    addToHistory(prevTrack, prevTrack.category === "video" ? "video" : "audio");
   };
 
   const handleTogglePlay = () => {
@@ -666,6 +720,8 @@ export default function Home() {
         onValidateCookie={handleValidateCookie}
         isCookieModalOpen={isCookieModalOpen}
         onToggleCookieModal={setIsCookieModalOpen}
+        historyCount={historyCount}
+        onOpenHistory={() => setIsHistoryModalOpen(true)}
         appMode={appMode}
         onModeChange={(mode) => {
           setAppMode(mode);
@@ -1121,6 +1177,25 @@ export default function Home() {
         file={selectedVideo}
         onClose={() => setSelectedVideo(null)}
         onDurationLoaded={handleUpdateFileDuration}
+      />
+
+      {/* Watch History Modal (Unified for TeraBox & YouTube Modes) */}
+      <WatchHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        history={watchHistoryList}
+        onPlayAudio={(file) => {
+          handlePlayAudio(file);
+        }}
+        onOpenVideo={(file) => {
+          handleOpenVideo(file);
+        }}
+        onPlayAll={handlePlayAllHistory}
+        onShuffleAll={handleShuffleAllHistory}
+        onRemoveItem={removeFromHistory}
+        onClearAll={clearHistory}
+        currentTrackId={currentTrack?.id}
+        isPlaying={isPlaying}
       />
     </div>
   );

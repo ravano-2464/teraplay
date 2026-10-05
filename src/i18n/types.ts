@@ -33,6 +33,7 @@ export interface Translations {
     themeDark: string;
     themeSystem: string;
     language: string;
+    history: string;
   };
   teraboxInput: {
     title: string;
@@ -124,6 +125,34 @@ export interface Translations {
     title: string;
     adFreeVideo: string;
     close: string;
+  };
+  history: {
+    title: string;
+    subtitle: string;
+    searchPlaceholder: string;
+    filterAll: string;
+    filterVideo: string;
+    filterAudio: string;
+    filterYoutube: string;
+    playAll: string;
+    shuffleAll: string;
+    clearAll: string;
+    confirmClear: string;
+    confirmClearDesc: string;
+    confirmBtn: string;
+    cancelBtn: string;
+    emptyTitle: string;
+    emptyDesc: string;
+    exploreBtn: string;
+    removeItem: string;
+    justNow: string;
+    itemsCount: string;
+    mediaVideo: string;
+    mediaAudio: string;
+    sourceYoutube: string;
+    sourceTerabox: string;
+    playAudio: string;
+    watchVideo: string;
   };
   pagination: {
     showing: string;

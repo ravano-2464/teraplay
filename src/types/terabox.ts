@@ -96,3 +96,6 @@ export interface PlayerState {
   isQueueOpen: boolean;
   isMiniMode: boolean;
 }
+
+export type { WatchHistoryItem } from "./watchHistory";
+
