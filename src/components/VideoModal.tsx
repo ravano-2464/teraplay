@@ -27,11 +27,14 @@ export const VideoModal: React.FC<VideoModalProps> = ({
 }) => {
   const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const modalRef = useRef<HTMLDivElement | null>(null);
   const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [startPos, setStartPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isMaximized, setIsMaximized] = useState(false);
+  const [animatingEntry, setAnimatingEntry] = useState(true);
+  const [isMaximizingTransition, setIsMaximizingTransition] = useState(false);
 
   const [ytFallbackTrack, setYtFallbackTrack] = useState<{ id: string; title: string; channel?: string } | null>(
     file?.youtubeId ? { id: file.youtubeId, title: file.youtubeTitle || file.name, channel: file.youtubeChannel } : null
@@ -42,12 +45,46 @@ export const VideoModal: React.FC<VideoModalProps> = ({
   // Update fallback info when a new file is opened (preserve user-dragged modal position)
   useEffect(() => {
     setFallbackNotice(null);
+    setAnimatingEntry(true);
     if (file?.youtubeId) {
       setYtFallbackTrack({ id: file.youtubeId, title: file.youtubeTitle || file.name, channel: file.youtubeChannel });
     } else {
       setYtFallbackTrack(null);
     }
   }, [file]);
+
+  // Robust global pointer drag listeners for butter-smooth window dragging
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handlePointerMove = (e: PointerEvent) => {
+      const deltaX = e.clientX - dragStart.x;
+      const deltaY = e.clientY - dragStart.y;
+
+      // Bound position within viewport so header always remains grabbable
+      const maxBoundX = typeof window !== "undefined" ? Math.max(300, window.innerWidth / 2) : 600;
+      const maxBoundY = typeof window !== "undefined" ? Math.max(200, window.innerHeight / 2) : 400;
+
+      setPosition({
+        x: Math.max(-maxBoundX, Math.min(maxBoundX, startPos.x + deltaX)),
+        y: Math.max(-maxBoundY, Math.min(maxBoundY, startPos.y + deltaY)),
+      });
+    };
+
+    const handlePointerUp = () => {
+      setIsDragging(false);
+    };
+
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
+    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointercancel", handlePointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
+    };
+  }, [isDragging, dragStart, startPos]);
 
   const handleClose = () => {
     if (videoRef.current) {
@@ -113,92 +150,93 @@ export const VideoModal: React.FC<VideoModalProps> = ({
     triggerYouTubeFallback();
   };
 
-  // Dragging handlers with PointerEvents
+  // Start drag on header
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (isMaximized) return;
-    if ((e.target as HTMLElement).closest("button, a, input")) return;
+    // Don't drag if clicking buttons, links, or inputs
+    if ((e.target as HTMLElement).closest("button, a, input, select")) return;
 
+    setAnimatingEntry(false);
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
     setStartPos({ x: position.x, y: position.y });
-    e.currentTarget.setPointerCapture(e.pointerId);
-  };
-
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging || isMaximized) return;
-    const deltaX = e.clientX - dragStart.x;
-    const deltaY = e.clientY - dragStart.y;
-    setPosition({
-      x: startPos.x + deltaX,
-      y: startPos.y + deltaY,
-    });
-  };
-
-  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging) return;
-    setIsDragging(false);
-    try {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    } catch {
-      // ignore
-    }
   };
 
   const handleResetPosition = (e: React.MouseEvent) => {
     e.stopPropagation();
+    setAnimatingEntry(false);
     setPosition({ x: 0, y: 0 });
   };
 
-  const handleToggleMaximize = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsMaximized(!isMaximized);
-    if (!isMaximized) {
-      setPosition({ x: 0, y: 0 });
-    }
+  const handleToggleMaximize = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setAnimatingEntry(false);
+    setIsMaximizingTransition(true);
+    setTimeout(() => setIsMaximizingTransition(false), 350);
+
+    setIsMaximized((prev) => {
+      const next = !prev;
+      if (next) {
+        setPosition({ x: 0, y: 0 });
+      }
+      return next;
+    });
   };
 
   return (
     <div
       onClick={handleClose}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/70 dark:bg-slate-950/80 backdrop-blur-md transition-all duration-200 ${
+      className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/75 dark:bg-slate-950/85 backdrop-blur-md modal-backdrop-animate ${
         isDragging ? "select-none cursor-grabbing" : ""
       }`}
     >
       <div
+        ref={modalRef}
         onClick={(e) => e.stopPropagation()}
         style={{
           transform: isMaximized
-            ? "none"
+            ? "translate3d(0px, 0px, 0)"
             : `translate3d(${position.x}px, ${position.y}px, 0)`,
-          transition: isDragging ? "none" : "transform 0.15s ease-out",
+          transition: isDragging
+            ? "none"
+            : "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), width 0.35s cubic-bezier(0.16, 1, 0.3, 1), height 0.35s cubic-bezier(0.16, 1, 0.3, 1), max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1), max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+          willChange: isDragging ? "transform" : "transform, width, height",
         }}
         className={`relative bg-white dark:bg-slate-950/95 border ${
           isYouTubeMode
-            ? "border-rose-400 dark:border-rose-500/40 shadow-[0_20px_60px_rgba(244,63,94,0.15)]"
-            : "border-slate-200 dark:border-cyan-500/40 shadow-[0_20px_60px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.8)]"
-        } rounded-2xl overflow-hidden flex flex-col ${
+            ? "border-rose-400 dark:border-rose-500/40 shadow-[0_25px_70px_rgba(244,63,94,0.25)]"
+            : "border-slate-200 dark:border-cyan-500/40 shadow-[0_25px_70px_rgba(0,0,0,0.3)] dark:shadow-[0_25px_70px_rgba(0,0,0,0.9)]"
+        } overflow-hidden flex flex-col ${
+          animatingEntry ? "modal-content-animate" : ""
+        } ${
+          isMaximizingTransition ? "modal-maximize-spring" : ""
+        } ${
           isMaximized
-            ? "w-full h-full max-w-none max-h-none rounded-none border-none"
-            : "w-full max-w-4xl max-h-[92vh]"
-        } ${isDragging ? "ring-2 ring-cyan-500/30" : ""}`}
+            ? "w-full h-full sm:w-[98vw] sm:h-[96vh] max-w-none max-h-none rounded-none sm:rounded-2xl border-transparent shadow-2xl"
+            : "w-full max-w-4xl h-[78vh] sm:h-[84vh] max-h-[92vh] rounded-3xl"
+        } ${isDragging ? "ring-2 ring-cyan-500/60 shadow-2xl cursor-grabbing select-none" : ""}`}
+        onAnimationEnd={() => setAnimatingEntry(false)}
       >
         {/* Draggable Modal Header */}
         <div
           onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onDoubleClick={handleToggleMaximize}
-          className={`flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 border-b border-slate-200 dark:border-white/10 bg-gradient-to-r ${
+          onDoubleClick={() => handleToggleMaximize()}
+          style={{ touchAction: "none" }}
+          className={`flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3.5 border-b border-slate-200 dark:border-white/10 bg-gradient-to-r select-none transition-colors ${
             isYouTubeMode
               ? "from-slate-100 via-rose-50 to-slate-100 dark:from-slate-950 dark:via-rose-950/40 dark:to-slate-950"
               : "from-slate-100 via-slate-50 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950"
           } ${isMaximized ? "cursor-default" : "cursor-grab active:cursor-grabbing"}`}
-          title={isMaximized ? undefined : "Tahan & drag header ini untuk menggeser jendela video"}
+          title={isMaximized ? "Klik 2x untuk memperkecil" : "Tahan & geser (drag) header untuk memindahkan posisi • Klik 2x untuk Maximize"}
         >
           {/* Left Title & Drag Icon */}
-          <div className="flex items-center gap-2.5 truncate min-w-0 pr-2 select-none">
-            <div className={`p-1.5 rounded-lg border shrink-0 ${
-              isYouTubeMode ? "bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-300 dark:border-rose-500/30" : "bg-cyan-100 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border-cyan-300 dark:border-cyan-500/30"
+          <div className="flex items-center gap-2.5 truncate min-w-0 pr-2 pointer-events-none">
+            <div className={`p-1.5 rounded-xl border shrink-0 transition-transform ${
+              isDragging ? "scale-125 rotate-6" : "hover:scale-110"
+            } ${
+              isYouTubeMode
+                ? "bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-300 dark:border-rose-500/30"
+                : "bg-cyan-100 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border-cyan-300 dark:border-cyan-500/30"
             }`}>
               <GripHorizontal className="w-4 h-4" />
             </div>
@@ -226,13 +264,14 @@ export const VideoModal: React.FC<VideoModalProps> = ({
           </div>
 
           {/* Right Action Controls */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0 pointer-events-auto">
             {/* Toggle YouTube Fallback button */}
             {!isYouTubeMode && (
               <button
+                type="button"
                 onClick={triggerYouTubeFallback}
                 disabled={isSearchingFallback}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-500/20 hover:bg-rose-100 dark:hover:bg-rose-500/30 text-rose-600 dark:text-rose-300 text-xs font-semibold border border-rose-200 dark:border-rose-500/30 transition-all cursor-pointer shadow-sm"
+                className="btn-icon btn-icon-wiggle flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-500/20 hover:bg-rose-100 dark:hover:bg-rose-500/30 text-rose-600 dark:text-rose-300 text-xs font-semibold border border-rose-200 dark:border-rose-500/30 shadow-sm"
                 title={t.nav.youtubeMode}
               >
                 <Film className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" />
@@ -245,9 +284,10 @@ export const VideoModal: React.FC<VideoModalProps> = ({
             {/* Reset Position (if dragged) */}
             {(position.x !== 0 || position.y !== 0) && !isMaximized && (
               <button
+                type="button"
                 onClick={handleResetPosition}
-                className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"
-                title="Reset"
+                className="btn-icon btn-icon-spin p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                title="Reset Posisi ke Tengah"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
@@ -255,8 +295,10 @@ export const VideoModal: React.FC<VideoModalProps> = ({
 
             {/* Maximize / Restore Toggle */}
             <button
+              type="button"
               onClick={handleToggleMaximize}
-              className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer"
+              className="btn-icon btn-icon-spin p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-transform"
+              title={isMaximized ? "Perkecil (Restore)" : "Perbesar (Maximize)"}
             >
               {isMaximized ? (
                 <Minimize2 className="w-3.5 h-3.5" />
@@ -270,7 +312,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
               <a
                 href={file.downloadUrl}
                 download={file.name}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-cyan-50 dark:bg-cyan-500/20 hover:bg-cyan-100 dark:hover:bg-cyan-500/30 text-cyan-700 dark:text-cyan-300 text-xs font-semibold border border-cyan-200 dark:border-cyan-500/30 transition-all cursor-pointer"
+                className="btn-icon btn-icon-bounce-y flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-cyan-50 dark:bg-cyan-500/20 hover:bg-cyan-100 dark:hover:bg-cyan-500/30 text-cyan-700 dark:text-cyan-300 text-xs font-semibold border border-cyan-200 dark:border-cyan-500/30"
                 title={`${t.common.download} ${file.name}`}
               >
                 <Download className="w-3.5 h-3.5" />
@@ -280,8 +322,9 @@ export const VideoModal: React.FC<VideoModalProps> = ({
 
             {/* Close Button */}
             <button
+              type="button"
               onClick={handleClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-white hover:bg-rose-50 dark:hover:bg-rose-500/20 transition-all cursor-pointer ml-1"
+              className="btn-icon btn-icon-close p-1.5 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-white hover:bg-rose-50 dark:hover:bg-rose-500/20 ml-1"
               title={t.videoModal.close}
             >
               <X className="w-4 h-4 sm:w-5 sm:h-5 text-slate-500 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400" />
@@ -295,6 +338,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
             <span>{fallbackNotice}</span>
             {isYouTubeMode && (
               <button
+                type="button"
                 onClick={() => {
                   setYtFallbackTrack(null);
                   setFallbackNotice(null);
@@ -309,11 +353,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
 
         {/* Video Player Box */}
         <div
-          className={`relative flex-1 bg-black flex items-center justify-center ${
-            isMaximized
-              ? "h-[calc(100vh-80px)]"
-              : "min-h-[260px] sm:min-h-[420px] max-h-[72vh]"
-          }`}
+          className="relative flex-1 bg-black flex items-center justify-center w-full transition-all duration-300 overflow-hidden min-h-0"
         >
           {isYouTubeMode && activeYtId ? (
             <iframe
@@ -323,7 +363,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
               title={ytFallbackTrack?.title || file.name}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
-              className="w-full h-full border-0"
+              className="w-full h-full border-0 transition-all duration-300"
             />
           ) : (
             <video
@@ -336,7 +376,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
               onLoadedMetadata={handleLoadedMetadata}
               onDurationChange={handleLoadedMetadata}
               onError={handleVideoError}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain transition-all duration-300"
             >
               Browser Anda tidak mendukung tag video HTML5.
             </video>

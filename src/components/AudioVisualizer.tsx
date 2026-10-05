@@ -5,6 +5,8 @@ import React, { useEffect, useRef } from "react";
 interface AudioVisualizerProps {
   isPlaying: boolean;
   audioElement?: HTMLMediaElement | HTMLVideoElement | null;
+  currentTime?: number;
+  volume?: number;
   barCount?: number;
   height?: number;
   theme?: "emerald" | "cyan" | "purple" | "rose";
@@ -14,10 +16,12 @@ interface AudioVisualizerProps {
 export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
   isPlaying,
   audioElement,
+  currentTime = 0,
+  volume = 1,
   barCount = 18,
   height = 28,
   theme = "emerald",
-  showPeaks = true,
+  showPeaks = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -46,7 +50,7 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
       if (!analyserRef.current) {
         const analyser = audioCtx.createAnalyser();
         analyser.fftSize = 128;
-        analyser.smoothingTimeConstant = 0.65;
+        analyser.smoothingTimeConstant = 0.8;
         analyserRef.current = analyser;
         dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount);
       }
@@ -75,33 +79,25 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
     interface BarState {
       current: number;
       target: number;
-      peak: number;
-      peakHold: number;
-      freqOffset: number;
-      speed: number;
-      bouncePhase: number;
     }
 
-    const bars: BarState[] = Array.from({ length: barCount }, (_, i) => ({
-      current: 2,
-      target: 2,
-      peak: 2,
-      peakHold: 0,
-      freqOffset: i * 0.38 + Math.random() * 0.2,
-      speed: 0.25 + Math.random() * 0.2,
-      bouncePhase: Math.random() * Math.PI * 2,
+    const bars: BarState[] = Array.from({ length: barCount }, () => ({
+      current: 2.5,
+      target: 2.5,
     }));
 
-    let startTime = performance.now();
+    const startTime = performance.now();
 
     const render = (now: number) => {
       const elapsed = (now - startTime) / 1000;
-      
-      // Auto-fit high DPI canvas
+      const audioTime = currentTime > 0 ? currentTime : elapsed;
+      const effVol = Math.max(0, Math.min(1, volume));
+
+      // Auto-fit high DPI canvas for crisp vector rendering
       const dpr = window.devicePixelRatio || 1;
-      const displayWidth = canvas.clientWidth || 96;
+      const displayWidth = canvas.clientWidth || 110;
       const displayHeight = canvas.clientHeight || height;
-      
+
       if (canvas.width !== displayWidth * dpr || canvas.height !== displayHeight * dpr) {
         canvas.width = displayWidth * dpr;
         canvas.height = displayHeight * dpr;
@@ -111,13 +107,13 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
       ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, displayWidth, displayHeight);
 
-      const totalSpacing = (barCount - 1) * 2;
-      const barWidth = Math.max(2.5, (displayWidth - totalSpacing) / barCount);
+      const totalGap = (barCount - 1) * 2;
+      const barWidth = Math.max(2.5, (displayWidth - totalGap) / barCount);
       const maxHeight = displayHeight - 4;
 
-      // Check real FFT data if available
+      // Check real Web Audio FFT data if available
       let hasRealFft = false;
-      if (analyserRef.current && dataArrayRef.current && isPlaying) {
+      if (analyserRef.current && dataArrayRef.current && isPlaying && effVol > 0) {
         try {
           (analyserRef.current as any).getByteFrequencyData(dataArrayRef.current);
           let sum = 0;
@@ -130,116 +126,105 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
         } catch {}
       }
 
-      // Punchy Musical Rhythm & Beat Synthesizer (130 BPM sync)
-      const beatFreq = 2.166; // 130 BPM
-      const beatCycle = elapsed * beatFreq;
-      
-      // Heavy 4-on-the-floor kick drum (snappy exponential spike)
-      const kickImpulse = Math.pow(Math.max(0, Math.sin(beatCycle * Math.PI)), 6);
-      
-      // Snare on 2nd and 4th beats
-      const snareImpulse = Math.pow(Math.max(0, Math.sin((beatCycle - 0.5) * Math.PI)), 8);
-      
-      // 16th-note rapid hi-hats
-      const hihatImpulse = Math.pow(Math.max(0, Math.sin(beatCycle * 4 * Math.PI)), 3);
-      
-      // Dynamic musical phrase energy (8-bar build-up and drops)
-      const phraseEnergy = Math.sin(elapsed * 0.4) * 0.25 + 0.75;
+      // Buttery smooth Harmonic Audio Synthesizer (continuous wave harmonics without harsh thresholds)
+      const beatFreq = 2.133; // 128 BPM
+      const beatCycle = audioTime * beatFreq;
+
+      // Exponential impulse envelopes for natural musical accents
+      const kickImpulse = Math.pow(Math.max(0, Math.sin(beatCycle * Math.PI)), 4);
+      const snareImpulse = Math.pow(Math.max(0, Math.sin((beatCycle - 0.5) * Math.PI)), 5);
+      const hihatImpulse = Math.pow(Math.max(0, Math.sin(beatCycle * 4 * Math.PI)), 2);
+
+      // 8-bar breathing phrase modulation
+      const phraseMod = Math.sin(audioTime * 0.35) * 0.12 + 0.88;
 
       bars.forEach((bar, i) => {
-        const norm = i / (barCount - 1); // 0 (bass) to 1 (treble)
+        const norm = i / (barCount - 1); // Normalized position 0 (bass) to 1 (treble)
 
-        if (isPlaying) {
+        if (isPlaying && effVol > 0) {
           if (hasRealFft && dataArrayRef.current) {
             const binIdx = Math.floor(norm * (dataArrayRef.current.length - 1));
-            const raw = dataArrayRef.current[binIdx] / 255;
-            bar.target = Math.max(2, Math.pow(raw, 1.2) * maxHeight);
+            const raw = (dataArrayRef.current[binIdx] / 255) * effVol;
+            bar.target = Math.max(2.5, Math.pow(raw, 1.2) * maxHeight);
           } else {
-            // Highly dynamic, punchy rhythm simulation
-            let amp = 0;
-            if (norm < 0.3) {
-              // Bass / Sub (Bars 0-5): Jumps dramatically with Kick & Sub Bass
-              const subWobble = Math.sin(elapsed * 6 + bar.freqOffset) * 0.15;
-              amp = (kickImpulse * 0.85 + subWobble + Math.random() * 0.1) * phraseEnergy;
-            } else if (norm < 0.7) {
-              // Mids / Vocals (Bars 6-12): Jumps with Snare & Melody
-              const melodyPulse = Math.cos(elapsed * 8.5 + bar.freqOffset * 2) * 0.35 + 0.35;
-              amp = (snareImpulse * 0.65 + melodyPulse * 0.4 + Math.random() * 0.15) * phraseEnergy;
-            } else {
-              // Treble / Sparkle (Bars 13-17): Rapid hi-hat flutter
-              const sparkle = Math.sin(elapsed * 14 + bar.freqOffset * 3) * 0.25 + 0.25;
-              amp = (hihatImpulse * 0.6 + sparkle * 0.3 + Math.random() * 0.2) * phraseEnergy;
-            }
+            // Overlapping continuous Gaussian curves across the entire spectrum
+            const bassGaussian = Math.exp(-Math.pow((norm - 0.15) / 0.18, 2));
+            const bassAmp = (kickImpulse * 0.9 + Math.sin(audioTime * 4.5 + norm * 3) * 0.15 + 0.12) * bassGaussian;
 
-            // Non-linear punch curve (bass & peaks pop high, quiet drops to 2px)
-            const punch = Math.pow(Math.min(1, Math.max(0, amp)), 1.3);
-            bar.target = Math.max(2, punch * maxHeight);
+            const midGaussian = Math.exp(-Math.pow((norm - 0.5) / 0.25, 2));
+            const melodyWave = Math.sin(audioTime * 5.2 - norm * 6.5) * 0.5 + 0.5;
+            const midAmp = (snareImpulse * 0.7 + melodyWave * 0.35 + 0.1) * midGaussian;
+
+            const trebleGaussian = Math.exp(-Math.pow((norm - 0.85) / 0.18, 2));
+            const shimmer = Math.sin(audioTime * 11.2 + norm * 10) * 0.5 + 0.5;
+            const trebleAmp = (hihatImpulse * 0.65 + shimmer * 0.35 + 0.08) * trebleGaussian;
+
+            // Continuous fluid river ripple flowing smoothly across spectrum
+            const fluidRiver = (Math.sin(audioTime * 3.2 - norm * 5.5) * 0.5 + 0.5) * 0.22;
+
+            const combinedEnergy = (bassAmp * 1.05 + midAmp * 0.95 + trebleAmp * 0.9 + fluidRiver) * phraseMod;
+            const power = Math.pow(Math.max(0, Math.min(1, combinedEnergy)), 1.15) * effVol;
+
+            bar.target = Math.max(2.5, power * maxHeight);
           }
         } else {
-          bar.target = 2;
+          // Resting flat baseline
+          bar.target = 2.5;
         }
 
-        // Snappy Attack & Spring Gravity Drop
+        // Liquid smooth spring physics (snappy attack, soft velvet gravity decay)
         if (bar.target > bar.current) {
-          bar.current += (bar.target - bar.current) * 0.65; // Ultra fast attack
+          bar.current += (bar.target - bar.current) * 0.38;
         } else {
-          bar.current += (bar.target - bar.current) * 0.28; // Snappy decay
-        }
-
-        // Floating Peak Cap Physics
-        if (showPeaks) {
-          if (bar.current >= bar.peak) {
-            bar.peak = bar.current;
-            bar.peakHold = 8;
-          } else {
-            if (bar.peakHold > 0) {
-              bar.peakHold--;
-            } else {
-              bar.peak = Math.max(bar.current, bar.peak - 1.4);
-            }
-          }
+          bar.current += (bar.target - bar.current) * 0.14;
         }
 
         const x = i * (barWidth + 2);
-        const barHeight = Math.max(2, bar.current);
+        const barHeight = Math.max(2.5, bar.current);
         const y = displayHeight - barHeight;
 
-        // Vibrant Multi-Stop Gradient with Top Glow
+        // Rich Multi-stop Luminous Gradient with Top Glow
         const gradient = ctx.createLinearGradient(0, displayHeight, 0, y);
+        let highlightColor = "#ffffff";
+
         if (theme === "rose") {
           // Cyberpunk Crimson / Magenta / Sunset Gold
-          gradient.addColorStop(0, "rgba(225, 29, 72, 0.4)");
-          gradient.addColorStop(0.6, "#f43f5e");
+          gradient.addColorStop(0, "rgba(225, 29, 72, 0.2)");
+          gradient.addColorStop(0.55, "#f43f5e");
           gradient.addColorStop(1, "#fb7185");
+          highlightColor = "rgba(255, 228, 230, 0.95)";
         } else if (theme === "emerald") {
           // Electric Emerald / Neon Mint
-          gradient.addColorStop(0, "rgba(5, 150, 105, 0.4)");
-          gradient.addColorStop(0.6, "#10b981");
+          gradient.addColorStop(0, "rgba(5, 150, 105, 0.2)");
+          gradient.addColorStop(0.55, "#10b981");
           gradient.addColorStop(1, "#6ee7b7");
+          highlightColor = "rgba(209, 250, 229, 0.95)";
         } else if (theme === "cyan") {
           // Cyber Cyan / Sky Glow
-          gradient.addColorStop(0, "rgba(8, 145, 178, 0.4)");
-          gradient.addColorStop(0.6, "#06b6d4");
+          gradient.addColorStop(0, "rgba(8, 145, 178, 0.2)");
+          gradient.addColorStop(0.55, "#06b6d4");
           gradient.addColorStop(1, "#38bdf8");
+          highlightColor = "rgba(224, 242, 254, 0.95)";
         } else {
           // Neon Violet / Purple
-          gradient.addColorStop(0, "rgba(147, 51, 234, 0.4)");
-          gradient.addColorStop(0.6, "#a855f7");
+          gradient.addColorStop(0, "rgba(147, 51, 234, 0.2)");
+          gradient.addColorStop(0.55, "#a855f7");
           gradient.addColorStop(1, "#f472b6");
+          highlightColor = "rgba(250, 232, 255, 0.95)";
         }
 
-        // Render main rounded pill bar
+        // Draw smooth rounded pill bar
+        const barRadius = Math.min(barWidth / 2, 2.5);
         ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.roundRect(x, y, barWidth, barHeight, [2, 2, 0, 0]);
+        ctx.roundRect(x, y, barWidth, barHeight, [barRadius, barRadius, 1, 1]);
         ctx.fill();
 
-        // Render floating neon peak cap
-        if (showPeaks && bar.peak > 4) {
-          const peakY = Math.max(0, displayHeight - bar.peak - 2);
-          ctx.fillStyle = theme === "rose" ? "#ffe4e6" : theme === "emerald" ? "#d1fae5" : "#e0f2fe";
+        // Luminous top tip highlight for extra visual polish (blended seamlessly into the bar)
+        if (isPlaying && effVol > 0 && barHeight > 5) {
+          ctx.fillStyle = highlightColor;
           ctx.beginPath();
-          ctx.roundRect(x, peakY, barWidth, 1.5, [1, 1, 1, 1]);
+          ctx.roundRect(x + 0.5, y, barWidth - 1, Math.min(2, barHeight * 0.25), [barRadius, barRadius, 0, 0]);
           ctx.fill();
         }
       });
@@ -255,10 +240,10 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [isPlaying, barCount, height, theme, showPeaks]);
+  }, [isPlaying, currentTime, volume, barCount, height, theme, showPeaks]);
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-xl bg-slate-100/90 dark:bg-slate-900/90 px-2 py-1 border border-slate-200/80 dark:border-white/10 shadow-inner">
+    <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-xl bg-slate-900/60 dark:bg-slate-950/80 px-2.5 py-1 border border-slate-200/40 dark:border-white/10 shadow-inner backdrop-blur-sm">
       <canvas
         ref={canvasRef}
         className="w-full h-full block"

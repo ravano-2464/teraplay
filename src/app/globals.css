@@ -144,6 +144,162 @@ body {
   100% { height: 26px; }
 }
 
+/* ========================================================================= */
+/* MODAL ANIMATIONS                                                          */
+/* ========================================================================= */
+
+@keyframes modalBackdropFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+}
+
+@keyframes modalScaleIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(16px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.015) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalFloatingIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(24px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-backdrop-animate {
+  animation: modalBackdropFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.modal-content-animate {
+  animation: modalScaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: center center;
+}
+
+.modal-floating-animate {
+  animation: modalFloatingIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalMaximizeSpring {
+  0% { transform: scale(0.97); }
+  60% { transform: scale(1.008); }
+  100% { transform: scale(1); }
+}
+
+.modal-maximize-spring {
+  animation: modalMaximizeSpring 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ========================================================================= */
+/* BUTTON & ICON MICRO-ANIMATIONS                                            */
+/* ========================================================================= */
+
+@keyframes iconWiggle {
+  0%, 100% { transform: rotate(0deg) scale(1.1); }
+  25% { transform: rotate(-10deg) scale(1.15); }
+  75% { transform: rotate(10deg) scale(1.15); }
+}
+
+@keyframes iconPulseGlow {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(244, 63, 94, 0.4)); }
+  50% { transform: scale(1.18); filter: drop-shadow(0 0 8px rgba(244, 63, 94, 0.8)); }
+}
+
+@keyframes iconBounceY {
+  0%, 100% { transform: translateY(0) scale(1.08); }
+  50% { transform: translateY(-3px) scale(1.12); }
+}
+
+@keyframes iconBounceX {
+  0%, 100% { transform: translateX(0) scale(1.08); }
+  50% { transform: translateX(3px) scale(1.12); }
+}
+
+/* Base Tactile Interactive Button */
+.btn-interactive {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.btn-interactive:hover {
+  transform: translateY(-1.5px);
+}
+
+.btn-interactive:active {
+  transform: scale(0.95) translateY(0);
+}
+
+/* Button with generic icon animation */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.btn-icon svg {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
+}
+
+.btn-icon:hover {
+  transform: translateY(-1px);
+}
+
+.btn-icon:hover svg {
+  transform: scale(1.18);
+}
+
+.btn-icon:active {
+  transform: scale(0.93);
+}
+
+/* Rotating icon (for close, refresh, settings) */
+.btn-icon-spin:hover svg {
+  transform: rotate(180deg) scale(1.15);
+}
+
+.btn-icon-close:hover svg {
+  transform: rotate(90deg) scale(1.2);
+}
+
+/* Wiggling icon (for notification, key, music, sparkles) */
+.btn-icon-wiggle:hover svg {
+  animation: iconWiggle 0.45s ease-in-out;
+}
+
+/* Vertical bounce (for download, play) */
+.btn-icon-bounce-y:hover svg {
+  animation: iconBounceY 0.5s ease-in-out infinite alternate;
+}
+
+/* Horizontal bounce (for next, forward, external link) */
+.btn-icon-bounce-x:hover svg {
+  animation: iconBounceX 0.5s ease-in-out infinite alternate;
+}
+
 /* Range input styling */
 input[type="range"] {
   accent-color: #38bdf8;

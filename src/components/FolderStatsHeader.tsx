@@ -145,7 +145,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
                 {parentPath && onOpenFolder && (
                   <button
                     onClick={() => onOpenFolder(parentPath)}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-sky-50 dark:bg-slate-800 dark:hover:bg-sky-500/20 text-slate-700 hover:text-sky-700 dark:text-slate-300 dark:hover:text-sky-300 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer font-semibold shadow-sm"
+                    className="btn-icon btn-icon-bounce-x flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-sky-50 dark:bg-slate-800 dark:hover:bg-sky-500/20 text-slate-700 hover:text-sky-700 dark:text-slate-300 dark:hover:text-sky-300 border border-slate-200 dark:border-slate-700 font-semibold shadow-sm"
                     title={`Kembali ke ${parentPath}`}
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
@@ -239,7 +239,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
             {/* Copy Link button */}
             <button
               onClick={handleCopyLink}
-              className="p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/90 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white border border-slate-200 dark:border-slate-800 transition-all cursor-pointer shadow-sm"
+              className="btn-icon p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/90 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white border border-slate-200 dark:border-slate-800 shadow-sm"
               title="Salin link TeraBox"
             >
               {copied ? <Check className="w-5 h-5 text-emerald-500 dark:text-emerald-400" /> : <Copy className="w-5 h-5" />}
@@ -285,7 +285,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
               {onShuffleAllAudio && (
                 <button
                   onClick={onShuffleAllAudio}
-                  className="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 dark:bg-slate-900/90 dark:hover:bg-slate-800 text-teal-700 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 border border-teal-300 dark:border-teal-500/30 hover:border-teal-500/50 font-bold text-xs shadow-sm transition-all cursor-pointer"
+                  className="btn-icon btn-icon-spin flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 dark:bg-slate-900/90 dark:hover:bg-slate-800 text-teal-700 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 border border-teal-300 dark:border-teal-500/30 hover:border-teal-500/50 font-bold text-xs shadow-sm"
                   title="Putar acak semua lagu di playlist"
                 >
                   <Shuffle className="w-3.5 h-3.5" />
@@ -294,7 +294,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
               )}
               <button
                 onClick={onPlayAllAudio}
-                className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-extrabold text-xs shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
+                className="btn-icon flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-extrabold text-xs shadow-md shadow-emerald-500/20"
               >
                 <PlayCircle className="w-4 h-4 fill-slate-950 text-emerald-400" />
                 <span>Putar Semua (Play All)</span>
@@ -326,7 +326,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
                     onSearchChange("");
                     searchInputRef.current?.focus();
                   }}
-                  className="p-1 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer"
+                  className="btn-icon btn-icon-close p-1 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
                   title="Hapus pencarian"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -365,7 +365,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
             <div className="flex items-center bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
               <button
                 onClick={() => onToggleViewMode("table")}
-                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                className={`btn-icon p-1.5 rounded-lg transition-all ${
                   viewMode === "table"
                     ? "bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-sm"
                     : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
@@ -376,7 +376,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
               </button>
               <button
                 onClick={() => onToggleViewMode("grid")}
-                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                className={`btn-icon p-1.5 rounded-lg transition-all ${
                   viewMode === "grid"
                     ? "bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-sm"
                     : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
@@ -400,7 +400,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
                 <button
                   key={cat.id}
                   onClick={() => onSelectCategory(cat.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border cursor-pointer ${
+                  className={`btn-icon flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
                     isSelected
                       ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-950 border-slate-900 dark:border-white shadow-sm font-bold"
                       : "bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -439,7 +439,7 @@ export const FolderStatsHeader: React.FC<FolderStatsHeaderProps> = ({
                       onSearchChange(tag);
                     }
                   }}
-                  className={`px-2 py-0.5 rounded-lg text-[11px] font-mono border transition-colors cursor-pointer whitespace-nowrap ${
+                  className={`btn-interactive px-2 py-0.5 rounded-lg text-[11px] font-mono border whitespace-nowrap ${
                     isActive
                       ? "bg-sky-50 dark:bg-sky-500/25 text-sky-700 dark:text-sky-200 border-sky-300 dark:border-sky-500/50 font-bold"
                       : "bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"

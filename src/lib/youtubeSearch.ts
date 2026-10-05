@@ -105,11 +105,11 @@ export const POPULAR_YOUTUBE_TRACKS: YouTubeSearchResult[] = [
     channel: "Queen Official",
   },
   {
-    id: "jfKfPfyJRdk",
-    title: "lofi hip hop radio - beats to relax/study to",
+    id: "5qap5aO4i9A",
+    title: "lofi hip hop radio 📚 beats to relax/study to",
     duration: 0,
     formattedDuration: "LIVE",
-    thumbnailUrl: "https://i.ytimg.com/vi/jfKfPfyJRdk/hqdefault.jpg",
+    thumbnailUrl: "https://i.ytimg.com/vi/5qap5aO4i9A/hqdefault.jpg",
     channel: "Lofi Girl",
   },
   {

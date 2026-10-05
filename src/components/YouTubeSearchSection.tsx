@@ -125,7 +125,7 @@ export const YouTubeSearchSection: React.FC<YouTubeSearchSectionProps> = ({
                   <button
                     type="button"
                     onClick={() => setQuery("")}
-                    className="absolute inset-y-0 right-20 flex items-center pr-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    className="btn-icon btn-icon-close absolute inset-y-0 right-20 flex items-center pr-2 text-slate-400 hover:text-rose-500"
                     title="Hapus pencarian"
                   >
                     <X className="w-4 h-4" />
@@ -136,7 +136,7 @@ export const YouTubeSearchSection: React.FC<YouTubeSearchSectionProps> = ({
                   type="button"
                   suppressHydrationWarning
                   onClick={handlePaste}
-                  className="absolute inset-y-1.5 right-1.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900/90 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white text-xs font-medium border border-slate-200 dark:border-slate-700/60 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  className="btn-icon btn-icon-bounce-y absolute inset-y-1.5 right-1.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900/90 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white text-xs font-medium border border-slate-200 dark:border-slate-700/60 flex items-center gap-1.5 shadow-sm"
                   title="Paste from clipboard"
                 >
                   {copiedSuccess ? (
@@ -156,7 +156,7 @@ export const YouTubeSearchSection: React.FC<YouTubeSearchSectionProps> = ({
               <button
                 type="submit"
                 disabled={isLoading || !query.trim()}
-                className="px-6 py-3.5 rounded-2xl font-bold text-sm text-white bg-gradient-to-r from-red-500 via-rose-600 to-amber-500 hover:from-red-400 hover:to-amber-400 shadow-lg shadow-red-500/25 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="btn-icon btn-icon-bounce-x px-6 py-3.5 rounded-2xl font-bold text-sm text-white bg-gradient-to-r from-red-500 via-rose-600 to-amber-500 hover:from-red-400 hover:to-amber-400 shadow-lg shadow-red-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 suppressHydrationWarning
               >
                 {isLoading ? (
@@ -177,14 +177,14 @@ export const YouTubeSearchSection: React.FC<YouTubeSearchSectionProps> = ({
           {/* Quick Trending Tags */}
           <div className="flex flex-wrap items-center gap-1.5 pt-2">
             <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 flex items-center gap-1 mr-1">
-              <Flame className="w-3.5 h-3.5 text-amber-500" /> {t.youtube.quickTags}
+              <Flame className="w-3.5 h-3.5 text-amber-500 animate-pulse" /> {t.youtube.quickTags}
             </span>
             {TRENDING_TAGS.map((tag) => (
               <button
                 key={tag.label}
                 type="button"
                 onClick={() => handleTagClick(tag.query)}
-                className="text-[11px] font-medium px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-900/80 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-500/30 transition-all cursor-pointer shadow-2xs"
+                className="btn-interactive text-[11px] font-medium px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-900/80 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-500/30 shadow-2xs"
               >
                 {tag.label}
               </button>

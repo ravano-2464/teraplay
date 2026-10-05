@@ -149,7 +149,7 @@ export const YouTubeTableRow: React.FC<YouTubeTableRowProps> = ({
               e.stopPropagation();
               onPlayAudio(track);
             }}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/20 transition-colors cursor-pointer"
+            className="btn-icon p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/20"
             title={isCurrentlyPlaying ? t.common.actions : t.youtube.playAudio}
           >
             {isCurrentlyPlaying ? (
@@ -163,7 +163,7 @@ export const YouTubeTableRow: React.FC<YouTubeTableRowProps> = ({
             <button
               type="button"
               onClick={handleQueue}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="btn-icon p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
               title={t.youtube.addToQueue}
             >
               {queued ? <Check className="w-4 h-4 text-emerald-500" /> : <Plus className="w-4 h-4" />}
@@ -176,7 +176,7 @@ export const YouTubeTableRow: React.FC<YouTubeTableRowProps> = ({
               e.stopPropagation();
               onOpenVideo(track);
             }}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="btn-icon p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
             title={t.youtube.watchVideo}
           >
             <Film className="w-4 h-4" />
@@ -185,7 +185,7 @@ export const YouTubeTableRow: React.FC<YouTubeTableRowProps> = ({
           <button
             type="button"
             onClick={handleCopy}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="btn-icon p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
             title={t.youtube.copyLink}
           >
             {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
@@ -197,7 +197,7 @@ export const YouTubeTableRow: React.FC<YouTubeTableRowProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="btn-icon btn-icon-bounce-x p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800"
               title={t.youtube.openYouTube}
             >
               <ExternalLink className="w-4 h-4" />

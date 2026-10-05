@@ -673,7 +673,7 @@ export default function Home() {
       />
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-8 w-full flex-1 flex flex-col gap-4 sm:gap-6">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-8 pb-36 sm:pb-32 w-full flex-1 flex flex-col gap-4 sm:gap-6">
         {/* ========================================================= */}
         {/* YOUTUBE MODE VIEW                                         */}
         {/* ========================================================= */}
@@ -720,7 +720,7 @@ export default function Home() {
                   type="button"
                   onClick={handlePlayAllYouTube}
                   disabled={filteredAndSortedYtFiles.length === 0}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 shadow-md shadow-red-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  className="btn-icon flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 shadow-md shadow-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                   title={t.youtube.playAll}
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
@@ -732,7 +732,7 @@ export default function Home() {
                   type="button"
                   onClick={handleShuffleAllYouTube}
                   disabled={filteredAndSortedYtFiles.length === 0}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  className="btn-icon btn-icon-spin flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   title={t.youtube.shuffleAll}
                 >
                   <Shuffle className="w-3.5 h-3.5" />
@@ -744,7 +744,7 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={() => setYtViewMode("grid")}
-                    className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                    className={`btn-icon p-1.5 rounded-lg transition-colors ${
                       ytViewMode === "grid"
                         ? "bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-xs"
                         : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
@@ -756,7 +756,7 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={() => setYtViewMode("table")}
-                    className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                    className={`btn-icon p-1.5 rounded-lg transition-colors ${
                       ytViewMode === "table"
                         ? "bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-xs"
                         : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
@@ -913,7 +913,7 @@ export default function Home() {
                 </div>
                 <button
                   onClick={() => setIsCookieModalOpen(true)}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-bold text-xs shadow-md transition-all cursor-pointer whitespace-nowrap self-end sm:self-auto"
+                  className="btn-interactive px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-bold text-xs shadow-md whitespace-nowrap self-end sm:self-auto"
                 >
                   {cookieStatus === "expired" ? t.common.cookieNoticeUpdate : t.common.cookieNoticeAction}
                 </button>
@@ -953,7 +953,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setAppMode("youtube")}
-                  className="mt-5 flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white font-bold text-xs shadow-lg shadow-red-500/25 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                  className="btn-icon mt-5 flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white font-bold text-xs shadow-lg shadow-red-500/25"
                 >
                   <Youtube className="w-4 h-4 text-white" />
                   <span>{t.common.welcomeYtBtn}</span>
@@ -1100,6 +1100,7 @@ export default function Home() {
           cookieStatus={cookieStatus}
           onPlayTrack={handlePlayAudio}
           onTogglePlay={handleTogglePlay}
+          onPlaybackStateChange={setIsPlaying}
           onNextTrack={handleNextTrack}
           onPrevTrack={handlePrevTrack}
           isShuffle={isShuffle}

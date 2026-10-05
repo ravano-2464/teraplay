@@ -106,7 +106,7 @@ export const YouTubeCard: React.FC<YouTubeCardProps> = ({
               e.stopPropagation();
               onPlayAudio(track);
             }}
-            className="w-11 h-11 rounded-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-500/40 hover:scale-110 active:scale-95 transition-all cursor-pointer"
+            className="btn-icon w-11 h-11 rounded-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-500/40 hover:scale-110 active:scale-95"
             title={isCurrentlyPlaying ? t.common.actions : t.youtube.playAudio}
           >
             {isCurrentlyPlaying ? (
@@ -122,7 +122,7 @@ export const YouTubeCard: React.FC<YouTubeCardProps> = ({
               e.stopPropagation();
               onOpenVideo(track);
             }}
-            className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white flex items-center justify-center border border-white/30 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="btn-icon w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white flex items-center justify-center border border-white/30 hover:scale-105 active:scale-95"
             title={t.youtube.watchVideo}
           >
             <Film className="w-4 h-4" />
@@ -158,7 +158,7 @@ export const YouTubeCard: React.FC<YouTubeCardProps> = ({
             e.stopPropagation();
             onPlayAudio(track);
           }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 border border-rose-200 dark:border-rose-500/20 transition-colors cursor-pointer"
+          className="btn-icon btn-icon-wiggle flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 border border-rose-200 dark:border-rose-500/20 shadow-2xs"
         >
           {isCurrentlyPlaying ? (
             <>
@@ -178,7 +178,7 @@ export const YouTubeCard: React.FC<YouTubeCardProps> = ({
             <button
               type="button"
               onClick={handleQueue}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="btn-icon btn-icon-bounce-y p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
               title={t.youtube.addToQueue}
             >
               {queued ? <Check className="w-4 h-4 text-emerald-500" /> : <Plus className="w-4 h-4" />}
@@ -191,7 +191,7 @@ export const YouTubeCard: React.FC<YouTubeCardProps> = ({
               e.stopPropagation();
               onOpenVideo(track);
             }}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="btn-icon btn-icon-wiggle p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
             title={t.youtube.watchVideo}
           >
             <Film className="w-4 h-4" />
@@ -200,7 +200,7 @@ export const YouTubeCard: React.FC<YouTubeCardProps> = ({
           <button
             type="button"
             onClick={handleCopy}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="btn-icon btn-icon-bounce-y p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
             title={t.youtube.copyLink}
           >
             {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
@@ -212,7 +212,7 @@ export const YouTubeCard: React.FC<YouTubeCardProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="btn-icon btn-icon-bounce-x p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800"
               title={t.youtube.openYouTube}
             >
               <ExternalLink className="w-4 h-4" />

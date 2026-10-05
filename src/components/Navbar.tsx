@@ -174,14 +174,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               type="button"
               suppressHydrationWarning
               onClick={() => onModeChange?.("terabox")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`btn-icon flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 appMode === "terabox"
                   ? "bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-sm border border-slate-200/80 dark:border-white/10"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
               }`}
               title={t.nav.teraboxMode}
             >
-              <FolderSearch className="w-3.5 h-3.5" />
+              <FolderSearch className="w-3.5 h-3.5 transition-transform" />
               <span>{t.nav.teraboxMode}</span>
             </button>
 
@@ -189,14 +189,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               type="button"
               suppressHydrationWarning
               onClick={() => onModeChange?.("youtube")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`btn-icon btn-icon-wiggle flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 appMode === "youtube"
                   ? "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-md shadow-red-500/25"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
               }`}
               title={t.nav.youtubeMode}
             >
-              <Youtube className={`w-3.5 h-3.5 ${appMode === "youtube" ? "text-white" : "text-red-500"}`} />
+              <Youtube className={`w-3.5 h-3.5 transition-transform ${appMode === "youtube" ? "text-white" : "text-red-500"}`} />
               <span>{t.nav.youtubeMode}</span>
             </button>
           </div>
@@ -215,7 +215,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 type="button"
                 suppressHydrationWarning
                 onClick={() => setShowKeyModal(true)}
-                className={`flex items-center gap-1.5 text-xs font-semibold px-2 sm:px-3 py-1.5 rounded-xl border transition-all cursor-pointer shadow-sm ${
+                className={`btn-icon btn-icon-wiggle flex items-center gap-1.5 text-xs font-semibold px-2 sm:px-3 py-1.5 rounded-xl border transition-all shadow-sm ${
                   cookieStatus === "expired"
                     ? "bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/40 hover:bg-rose-500/25"
                     : ndusCookie || cookieStatus === "valid"
@@ -257,7 +257,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               type="button"
               suppressHydrationWarning
               onClick={() => onModeChange?.("terabox")}
-              className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`btn-icon flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all ${
                 appMode === "terabox"
                   ? "bg-white dark:bg-slate-800 text-sky-600 dark:text-sky-400 shadow-md border border-slate-200/80 dark:border-white/10"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
@@ -272,7 +272,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               type="button"
               suppressHydrationWarning
               onClick={() => onModeChange?.("youtube")}
-              className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`btn-icon btn-icon-wiggle flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bold transition-all ${
                 appMode === "youtube"
                   ? "bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-md shadow-red-500/25 font-black"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
@@ -286,20 +286,20 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </header>
 
-      {/* Modal TeraBox ndus Cookie */}
+      {/* Modal TeraBox ndus Cookie with Animated Backdrop & Dialog */}
       {showKeyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 dark:bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-sky-500/30 rounded-3xl p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 dark:bg-slate-950/85 backdrop-blur-md modal-backdrop-animate">
+          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-sky-500/40 rounded-3xl p-6 shadow-2xl modal-content-animate">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/10">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-sky-500 dark:text-sky-400" />
+                <ShieldCheck className="w-5 h-5 text-sky-500 dark:text-sky-400 animate-pulse" />
                 <h3 className="font-bold text-base text-slate-900 dark:text-white">Live TeraBox Drive API (ndus Cookie)</h3>
               </div>
               <button
                 type="button"
                 suppressHydrationWarning
                 onClick={() => setShowKeyModal(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                className="btn-icon btn-icon-close p-1.5 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -338,7 +338,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <button
                       type="button"
                       onClick={handleClear}
-                      className="p-2.5 rounded-xl bg-slate-100 hover:bg-rose-50 dark:bg-slate-800 dark:hover:bg-rose-500/20 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                      className="btn-icon btn-icon-wiggle p-2.5 rounded-xl bg-slate-100 hover:bg-rose-50 dark:bg-slate-800 dark:hover:bg-rose-500/20 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700"
                       title="Hapus token tersimpan"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -382,7 +382,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 type="button"
                 disabled={isValidating || !cookieInput.trim()}
                 onClick={() => handleValidate()}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 disabled:opacity-50 cursor-pointer transition-all shadow-sm"
+                className="btn-icon btn-icon-spin flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 disabled:opacity-50 shadow-sm"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isValidating ? "animate-spin text-sky-500" : ""}`} />
                 <span>{isValidating ? "Memverifikasi..." : "Verifikasi Validitas Token"}</span>
@@ -393,7 +393,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   type="button"
                   suppressHydrationWarning
                   onClick={() => setShowKeyModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                  className="btn-interactive px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
                   Tutup
                 </button>
@@ -401,7 +401,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   type="button"
                   suppressHydrationWarning
                   onClick={handleSave}
-                  className="flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-lg shadow-sky-500/20 cursor-pointer transition-all"
+                  className="btn-icon flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-lg shadow-sky-500/20"
                 >
                   {savedSuccess ? (
                     <>

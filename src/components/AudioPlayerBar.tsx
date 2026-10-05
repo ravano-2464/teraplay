@@ -43,6 +43,7 @@ interface AudioPlayerBarProps {
   cookieStatus?: "none" | "checking" | "valid" | "expired" | "error";
   onPlayTrack: (track: AudioTrack) => void;
   onTogglePlay: () => void;
+  onPlaybackStateChange?: (isPlaying: boolean) => void;
   onNextTrack: () => void;
   onPrevTrack: () => void;
   onClosePlayer?: () => void;
@@ -62,6 +63,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   cookieStatus = "none",
   onPlayTrack,
   onTogglePlay,
+  onPlaybackStateChange,
   onNextTrack,
   onPrevTrack,
   onClosePlayer,
@@ -81,8 +83,46 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.85);
   const [isMuted, setIsMuted] = useState(false);
+  const prevVolumeRef = useRef(0.85);
   const [internalShuffle, setInternalShuffle] = useState(false);
   const [internalRepeat, setInternalRepeat] = useState<"all" | "one" | "off">("all");
+
+  // Handle user volume slider changes
+  const handleVolumeChange = useCallback((newVol: number) => {
+    const clamped = Math.max(0, Math.min(1, isNaN(newVol) ? 0 : newVol));
+    setVolume(clamped);
+    if (clamped > 0) {
+      prevVolumeRef.current = clamped;
+      setIsMuted(false);
+    } else {
+      setIsMuted(true);
+    }
+  }, []);
+
+  // Handle user mute toggle
+  const handleToggleMute = useCallback(() => {
+    if (isMuted || volume === 0) {
+      const restored = prevVolumeRef.current > 0 ? prevVolumeRef.current : 0.85;
+      setVolume(restored);
+      setIsMuted(false);
+    } else {
+      if (volume > 0) {
+        prevVolumeRef.current = volume;
+      }
+      setIsMuted(true);
+    }
+  }, [isMuted, volume]);
+
+  const setPlayingState = useCallback(
+    (playing: boolean) => {
+      if (onPlaybackStateChange) {
+        onPlaybackStateChange(playing);
+      } else if (playing !== isPlaying) {
+        onTogglePlay();
+      }
+    },
+    [onPlaybackStateChange, isPlaying, onTogglePlay]
+  );
 
   const activeShuffle = isShuffle !== undefined ? isShuffle : internalShuffle;
   const activeRepeat = repeatMode !== undefined ? repeatMode : internalRepeat;
@@ -115,7 +155,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   const [videoSize, setVideoSize] = useState<"normal" | "large">("normal");
 
   // Dynamic Real-time Rhythm Beat heights for thumbnail equalizer
-  const [beatHeights, setBeatHeights] = useState<number[]>([4, 8, 5]);
+  const [beatHeights, setBeatHeights] = useState<number[]>([2, 2, 2]);
 
   // Persistent Playback Source Mode: "terabox" | "youtube"
   const [playbackSourceMode, setPlaybackSourceMode] = useState<"terabox" | "youtube">("terabox");
@@ -173,31 +213,40 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   const isYouTubeMode = Boolean(playbackSourceMode === "youtube" || isFallbackActive);
   const activeYtId = ytTrack?.id || currentTrack?.youtubeId;
 
-  // Real-time animation loop for Album Equalizer Bars (following musical rhythm)
+  // Real-time animation loop for Album Equalizer Bars (following musical rhythm & volume)
   useEffect(() => {
     let animFrame: number;
     const startTime = performance.now();
 
+    let curH1 = 2;
+    let curH2 = 2;
+    let curH3 = 2;
+
     const animateBeats = (now: number) => {
       const elapsed = (now - startTime) / 1000;
-      if (isPlaying && !isBuffering && !hasError) {
-        // 128 BPM beat calculation
-        const beatTime = elapsed * 2.133;
+      const effVol = isMuted ? 0 : volume;
+
+      if (isPlaying && !isBuffering && !hasError && effVol > 0) {
+        // 128 BPM beat calculation based on actual track currentTime
+        const beatTime = (currentTime > 0 ? currentTime : elapsed) * 2.133;
         const kick = Math.pow(Math.max(0, Math.sin(beatTime * Math.PI)), 4);
         const snare = Math.pow(Math.max(0, Math.sin((beatTime - 0.5) * Math.PI)), 5);
         const hihat = Math.pow(Math.max(0, Math.sin(beatTime * 4 * Math.PI)), 2);
 
-        const h1 = Math.max(3, (kick * 0.75 + Math.sin(elapsed * 5) * 0.15 + 0.1) * 16);
-        const h2 = Math.max(3, (snare * 0.7 + Math.cos(elapsed * 7) * 0.2 + 0.1) * 20);
-        const h3 = Math.max(3, (hihat * 0.65 + Math.sin(elapsed * 9) * 0.25 + 0.1) * 15);
+        const targetH1 = Math.max(2, (kick * 0.8 + Math.sin(beatTime * 4) * 0.15 + 0.1) * 14 * effVol);
+        const targetH2 = Math.max(2, (snare * 0.75 + Math.cos(beatTime * 5.5) * 0.2 + 0.1) * 16 * effVol);
+        const targetH3 = Math.max(2, (hihat * 0.7 + Math.sin(beatTime * 8) * 0.2 + 0.1) * 12 * effVol);
 
-        setBeatHeights([h1, h2, h3]);
+        curH1 += (targetH1 - curH1) * 0.35;
+        curH2 += (targetH2 - curH2) * 0.35;
+        curH3 += (targetH3 - curH3) * 0.35;
+
+        setBeatHeights([curH1, curH2, curH3]);
       } else {
-        setBeatHeights((prev) => [
-          Math.max(3, prev[0] * 0.8),
-          Math.max(3, prev[1] * 0.8),
-          Math.max(3, prev[2] * 0.8),
-        ]);
+        curH1 += (2 - curH1) * 0.2;
+        curH2 += (2 - curH2) * 0.2;
+        curH3 += (2 - curH3) * 0.2;
+        setBeatHeights([curH1, curH2, curH3]);
       }
 
       animFrame = requestAnimationFrame(animateBeats);
@@ -205,32 +254,45 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
 
     animFrame = requestAnimationFrame(animateBeats);
     return () => cancelAnimationFrame(animFrame);
-  }, [isPlaying, isBuffering, hasError]);
+  }, [isPlaying, isBuffering, hasError, currentTime, isMuted, volume]);
+
+  // Robust global pointer drag listeners for mini video window
+  useEffect(() => {
+    if (!isVideoDragging) return;
+
+    const handleGlobalPointerMove = (e: PointerEvent) => {
+      const deltaX = e.clientX - videoDragStart.x;
+      const deltaY = e.clientY - videoDragStart.y;
+
+      const maxBoundX = typeof window !== "undefined" ? window.innerWidth : 800;
+      const maxBoundY = typeof window !== "undefined" ? window.innerHeight : 600;
+
+      setVideoPos({
+        x: Math.max(-maxBoundX, Math.min(maxBoundX, videoStartPos.x + deltaX)),
+        y: Math.max(-maxBoundY, Math.min(maxBoundY, videoStartPos.y + deltaY)),
+      });
+    };
+
+    const handleGlobalPointerUp = () => {
+      setIsVideoDragging(false);
+    };
+
+    window.addEventListener("pointermove", handleGlobalPointerMove, { passive: true });
+    window.addEventListener("pointerup", handleGlobalPointerUp);
+    window.addEventListener("pointercancel", handleGlobalPointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handleGlobalPointerMove);
+      window.removeEventListener("pointerup", handleGlobalPointerUp);
+      window.removeEventListener("pointercancel", handleGlobalPointerUp);
+    };
+  }, [isVideoDragging, videoDragStart, videoStartPos]);
 
   const handleVideoPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if ((e.target as HTMLElement).closest("button, a, input")) return;
+    if ((e.target as HTMLElement).closest("button, a, input, select")) return;
     setIsVideoDragging(true);
     setVideoDragStart({ x: e.clientX, y: e.clientY });
     setVideoStartPos({ x: videoPos.x, y: videoPos.y });
-    e.currentTarget.setPointerCapture(e.pointerId);
-  };
-
-  const handleVideoPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isVideoDragging) return;
-    setVideoPos({
-      x: videoStartPos.x + (e.clientX - videoDragStart.x),
-      y: videoStartPos.y + (e.clientY - videoDragStart.y),
-    });
-  };
-
-  const handleVideoPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isVideoDragging) return;
-    setIsVideoDragging(false);
-    try {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    } catch {
-      // ignore
-    }
   };
 
   const isVideoFormat =
@@ -255,6 +317,40 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
       // ignore
     }
   }, []);
+
+  // Apply volume and mute state cleanly to YouTube iframe
+  const applyYouTubeVolume = useCallback(
+    (vol: number, muted: boolean) => {
+      if (!ytIframeRef.current?.contentWindow) return;
+      const isEffMuted = muted || vol <= 0;
+      const targetVol = isEffMuted ? 0 : Math.round(Math.max(0, Math.min(1, vol)) * 100);
+
+      try {
+        if (isEffMuted) {
+          ytIframeRef.current.contentWindow.postMessage(
+            JSON.stringify({ event: "command", func: "setVolume", args: [0] }),
+            "*"
+          );
+          ytIframeRef.current.contentWindow.postMessage(
+            JSON.stringify({ event: "command", func: "mute", args: [] }),
+            "*"
+          );
+        } else {
+          ytIframeRef.current.contentWindow.postMessage(
+            JSON.stringify({ event: "command", func: "unMute", args: [] }),
+            "*"
+          );
+          ytIframeRef.current.contentWindow.postMessage(
+            JSON.stringify({ event: "command", func: "setVolume", args: [targetVol] }),
+            "*"
+          );
+        }
+      } catch {
+        // ignore
+      }
+    },
+    []
+  );
 
   // Safe play helper for HTML5 media
   const safePlay = useCallback(async () => {
@@ -364,14 +460,8 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
         "*"
       );
 
-      // Apply initial volume & unMute
-      const targetVol = isMuted ? 0 : Math.round(volume * 100);
-      sendYtCommand("setVolume", [targetVol]);
-      if (isMuted) {
-        sendYtCommand("mute");
-      } else {
-        sendYtCommand("unMute");
-      }
+      // Apply initial volume & mute state cleanly
+      applyYouTubeVolume(volume, isMuted);
 
       if (playbackRate !== 1) {
         sendYtCommand("setPlaybackRate", [playbackRate]);
@@ -384,7 +474,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
     } catch {
       // ignore
     }
-  }, [isPlaying, isMuted, volume, playbackRate, sendYtCommand]);
+  }, [isPlaying, isMuted, volume, playbackRate, applyYouTubeVolume, sendYtCommand]);
 
   // Sync YouTube playback controls (play/pause)
   useEffect(() => {
@@ -400,14 +490,8 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   // Sync YouTube volume & mute
   useEffect(() => {
     if (!isYouTubeMode) return;
-    const targetVol = isMuted ? 0 : Math.round(volume * 100);
-    sendYtCommand("setVolume", [targetVol]);
-    if (isMuted) {
-      sendYtCommand("mute");
-    } else {
-      sendYtCommand("unMute");
-    }
-  }, [volume, isMuted, isYouTubeMode, sendYtCommand]);
+    applyYouTubeVolume(volume, isMuted);
+  }, [volume, isMuted, isYouTubeMode, applyYouTubeVolume]);
 
   // Sync YouTube playback rate
   useEffect(() => {
@@ -451,8 +535,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
           if (isPlaying) {
             sendYtCommand("playVideo");
           }
-          sendYtCommand("unMute");
-          sendYtCommand("setVolume", [isMuted ? 0 : Math.round(volume * 100)]);
+          applyYouTubeVolume(volume, isMuted);
           setIsBuffering(false);
           setHasError(false);
         }
@@ -468,6 +551,27 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
               onDurationLoaded?.(currentTrack.id, info.duration);
             }
           }
+
+          // Bidirectional Mute & Volume synchronization from native YouTube player
+          if (typeof info.muted === "boolean") {
+            setIsMuted(info.muted);
+          }
+          if (typeof info.volume === "number" && !isNaN(info.volume)) {
+            const rawVol = Math.max(0, Math.min(100, info.volume));
+            const newVol = rawVol / 100;
+            if (rawVol === 0) {
+              setIsMuted(true);
+            } else {
+              setVolume((prevVol) => {
+                if (Math.abs(prevVol - newVol) > 0.02) {
+                  prevVolumeRef.current = newVol;
+                  return newVol;
+                }
+                return prevVol;
+              });
+            }
+          }
+
           if (info.playerState === 0) {
             // Ended
             handleEndedRef.current();
@@ -475,9 +579,31 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
             // Playing
             setIsBuffering(false);
             setHasError(false);
+            setPlayingState(true);
+          } else if (info.playerState === 2) {
+            // Paused
+            setIsBuffering(false);
+            setPlayingState(false);
           } else if (info.playerState === 3) {
             // Buffering
             setIsBuffering(true);
+          }
+        } else if (msgData?.event === "onVolumeChange" || msgData?.event === "volumeChange") {
+          const vData = msgData.data || msgData.info;
+          if (vData) {
+            if (typeof vData.muted === "boolean") {
+              setIsMuted(vData.muted);
+            }
+            if (typeof vData.volume === "number" && !isNaN(vData.volume)) {
+              const rawVol = Math.max(0, Math.min(100, vData.volume));
+              const newVol = rawVol / 100;
+              if (rawVol === 0) {
+                setIsMuted(true);
+              } else {
+                setVolume(newVol);
+                prevVolumeRef.current = newVol;
+              }
+            }
           }
         } else if (msgData?.event === "onStateChange") {
           if (msgData.data === 0) {
@@ -485,6 +611,10 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
           } else if (msgData.data === 1) {
             setIsBuffering(false);
             setHasError(false);
+            setPlayingState(true);
+          } else if (msgData.data === 2) {
+            setIsBuffering(false);
+            setPlayingState(false);
           } else if (msgData.data === 3) {
             setIsBuffering(true);
           }
@@ -496,7 +626,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
 
     window.addEventListener("message", handleWindowMessage);
     return () => window.removeEventListener("message", handleWindowMessage);
-  }, [isYouTubeMode, currentTrack, isPlaying, isMuted, volume, onDurationLoaded, sendYtCommand]);
+  }, [isYouTubeMode, currentTrack, isPlaying, isMuted, volume, onDurationLoaded, sendYtCommand, setPlayingState]);
 
   // Polling backup timer for seekbar updates during YouTube playback
   useEffect(() => {
@@ -552,8 +682,22 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   // Volume & Speed effects for HTML5 media
   useEffect(() => {
     if (!mediaRef.current || isYouTubeMode) return;
-    mediaRef.current.volume = isMuted ? 0 : volume;
+    const isEffMuted = isMuted || volume <= 0;
+    const safeVol = isEffMuted ? 0 : Math.max(0, Math.min(1, volume));
+    mediaRef.current.volume = safeVol;
+    mediaRef.current.muted = isEffMuted;
   }, [volume, isMuted, isYouTubeMode]);
+
+  // Mute & pause HTML5 media when in YouTube mode
+  useEffect(() => {
+    if (isYouTubeMode && mediaRef.current) {
+      try {
+        mediaRef.current.pause();
+        mediaRef.current.muted = true;
+        mediaRef.current.volume = 0;
+      } catch {}
+    }
+  }, [isYouTubeMode]);
 
   useEffect(() => {
     if (!mediaRef.current || isYouTubeMode) return;
@@ -601,6 +745,17 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
       updateMediaDuration();
       setIsBuffering(false);
       setHasError(false);
+    }
+  };
+
+  const handleHtml5VolumeChange = () => {
+    if (mediaRef.current && !isYouTubeMode) {
+      const isMediaMuted = mediaRef.current.muted || mediaRef.current.volume === 0;
+      setIsMuted(isMediaMuted);
+      if (!isMediaMuted && mediaRef.current.volume > 0) {
+        setVolume(mediaRef.current.volume);
+        prevVolumeRef.current = mediaRef.current.volume;
+      }
     }
   };
 
@@ -662,17 +817,18 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
       <div
         style={{
           transform: `translate3d(${videoPos.x}px, ${videoPos.y}px, 0)`,
-          transition: isVideoDragging ? "none" : "transform 0.15s ease-out",
+          transition: isVideoDragging ? "none" : "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), width 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+          willChange: isVideoDragging ? "transform" : "auto",
         }}
         className={
           showVideoPreview && isVideoFormat
-            ? `fixed bottom-24 right-4 z-50 ${
-                videoSize === "large" ? "w-80 sm:w-[480px]" : "w-72 sm:w-80"
+            ? `fixed bottom-36 md:bottom-24 right-2 sm:right-4 z-50 w-[calc(100vw-1rem)] sm:w-80 ${
+                videoSize === "large" ? "md:w-[480px]" : "md:w-80"
               } rounded-2xl border ${
                 isYouTubeMode
                   ? "border-rose-500/50 shadow-[0_20px_50px_rgba(244,63,94,0.3)]"
                   : "border-slate-200 dark:border-emerald-500/50 shadow-[0_20px_50px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.85)]"
-              } bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 ${
+              } bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl overflow-hidden flex flex-col ${
                 isVideoDragging ? "ring-2 ring-emerald-400 select-none cursor-grabbing" : ""
               }`
             : isYouTubeMode && activeYtId
@@ -684,8 +840,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
         {showVideoPreview && (
           <div
             onPointerDown={handleVideoPointerDown}
-            onPointerMove={handleVideoPointerMove}
-            onPointerUp={handleVideoPointerUp}
+            style={{ touchAction: "none" }}
             className={`flex items-center justify-between px-3 py-2 bg-gradient-to-r ${
               isYouTubeMode
                 ? "from-slate-100 via-rose-100/50 to-slate-100 dark:from-slate-900 dark:via-rose-950/40 dark:to-slate-900"
@@ -704,7 +859,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
             <div className="flex items-center gap-1 shrink-0">
               <button
                 onClick={() => setVideoSize(videoSize === "large" ? "normal" : "large")}
-                className="p-1 rounded text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                className="btn-icon p-1 rounded text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800"
                 title={videoSize === "large" ? "Perkecil ukuran" : "Perbesar ukuran"}
               >
                 {videoSize === "large" ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
@@ -712,7 +867,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
               {(videoPos.x !== 0 || videoPos.y !== 0) && (
                 <button
                   onClick={() => setVideoPos({ x: 0, y: 0 })}
-                  className="p-1 rounded text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="btn-icon btn-icon-spin p-1 rounded text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800"
                   title="Reset posisi"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
@@ -720,7 +875,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
               )}
               <button
                 onClick={() => setShowVideoPreview(false)}
-                className="p-1 rounded text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/20 transition-colors cursor-pointer"
+                className="btn-icon btn-icon-close p-1 rounded text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/20"
                 title="Tutup mini player (audio tetap berjalan)"
               >
                 <X className="w-3.5 h-3.5" />
@@ -751,9 +906,23 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
               onTimeUpdate={handleTimeUpdate}
               onLoadedMetadata={handleLoadedMetadata}
               onDurationChange={handleDurationChange}
+              onVolumeChange={handleHtml5VolumeChange}
               onCanPlay={handleCanPlay}
               onWaiting={handleWaiting}
-              onPlaying={handlePlaying}
+              onPlaying={() => {
+                setPlayingState(true);
+                setIsBuffering(false);
+                setHasError(false);
+              }}
+              onPlay={() => {
+                setPlayingState(true);
+                setIsBuffering(false);
+                setHasError(false);
+              }}
+              onPause={() => {
+                setPlayingState(false);
+                setIsBuffering(false);
+              }}
               onError={handleError}
               onEnded={handleEnded}
               className="w-full h-full object-contain"
@@ -771,9 +940,23 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
           onDurationChange={handleDurationChange}
+          onVolumeChange={handleHtml5VolumeChange}
           onCanPlay={handleCanPlay}
           onWaiting={handleWaiting}
-          onPlaying={handlePlaying}
+          onPlaying={() => {
+            setPlayingState(true);
+            setIsBuffering(false);
+            setHasError(false);
+          }}
+          onPlay={() => {
+            setPlayingState(true);
+            setIsBuffering(false);
+            setHasError(false);
+          }}
+          onPause={() => {
+            setPlayingState(false);
+            setIsBuffering(false);
+          }}
           onError={handleError}
           onEnded={handleEnded}
           className="hidden"
@@ -785,9 +968,9 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
         <div className="max-w-6xl mx-auto pointer-events-auto">
           {/* Fallback & Notification Drawer if Error Occurred */}
           {hasError && (
-            <div className="mb-2 p-3.5 rounded-2xl glass-panel bg-rose-50/95 dark:bg-rose-950/90 border border-rose-300 dark:border-rose-500/40 shadow-2xl animate-in slide-in-from-bottom-3 duration-200 text-xs text-rose-800 dark:text-rose-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="mb-2 p-3 sm:p-3.5 rounded-2xl glass-panel bg-rose-50/95 dark:bg-rose-950/90 border border-rose-300 dark:border-rose-500/40 shadow-2xl modal-content-animate text-xs text-rose-800 dark:text-rose-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
-                <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
+                <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 animate-bounce" />
                 <div>
                   <p className="font-bold text-rose-950 dark:text-white text-xs">
                     {errorMessage || "Streaming media TeraBox gagal dimuat."}
@@ -803,7 +986,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                 <button
                   onClick={triggerYouTubeFallback}
                   disabled={isSearchingFallback}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white font-bold shadow transition-all cursor-pointer text-xs"
+                  className="btn-icon btn-icon-wiggle flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white font-bold shadow text-xs"
                 >
                   <Youtube className="w-3.5 h-3.5" />
                   <span>{isSearchingFallback ? "Mencari di YouTube..." : "Putar via YouTube Bebas Iklan"}</span>
@@ -811,7 +994,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                 {(!ndusCookie || cookieStatus === "expired") && onOpenCookieModal && (
                   <button
                     onClick={onOpenCookieModal}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow transition-all cursor-pointer text-xs"
+                    className="btn-icon btn-icon-wiggle flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold shadow text-xs"
                   >
                     <Key className="w-3.5 h-3.5" />
                     <span>Cookie ndus</span>
@@ -823,30 +1006,30 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
 
           {/* Queue Drawer */}
           {isQueueOpen && (
-            <div className="mb-2 p-4 rounded-2xl glass-panel bg-white/98 dark:bg-slate-950/95 border border-slate-200 dark:border-white/10 shadow-2xl animate-in slide-in-from-bottom-5 duration-200">
+            <div className="mb-2 p-3 sm:p-4 rounded-3xl glass-panel bg-white/98 dark:bg-slate-950/95 border border-slate-200 dark:border-white/10 shadow-2xl modal-content-animate">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/10">
                 <div className="flex items-center gap-2">
-                  <ListMusic className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  <ListMusic className="w-5 h-5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
                   <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
                     Active Playlist Queue ({playlist.length} Tracks)
                   </h3>
                 </div>
                 <button
                   onClick={() => setIsQueueOpen(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  className="btn-icon btn-icon-close p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="mt-3 max-h-56 overflow-y-auto space-y-1.5 pr-1">
+              <div className="mt-3 max-h-56 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
                 {playlist.map((track, idx) => {
                   const isCurrent = track.id === currentTrack.id;
                   return (
                     <div
                       key={track.id || idx}
                       onClick={() => onPlayTrack(track)}
-                      className={`flex items-center justify-between p-2.5 rounded-xl text-xs cursor-pointer transition-all border ${
+                      className={`btn-interactive flex items-center justify-between p-2.5 rounded-xl text-xs border ${
                         isCurrent
                           ? isYouTubeMode
                             ? "bg-rose-50 dark:bg-rose-500/20 border-rose-300 dark:border-rose-500/40 text-rose-950 dark:text-white font-bold"
@@ -904,10 +1087,10 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
 
           {/* Player Main Container */}
           <div
-            className={`relative rounded-2xl glass-panel bg-white/95 dark:bg-slate-950/95 border ${
+            className={`relative rounded-3xl glass-panel bg-white/95 dark:bg-slate-950/95 border ${
               isYouTubeMode
-                ? "border-rose-400 dark:border-rose-500/40 shadow-[0_10px_40px_rgba(244,63,94,0.18)] dark:shadow-[0_10px_40px_rgba(244,63,94,0.25)]"
-                : "border-slate-200 dark:border-emerald-500/30 shadow-[0_10px_40px_rgba(0,0,0,0.12)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.7)]"
+                ? "border-rose-400 dark:border-rose-500/40 shadow-[0_12px_45px_rgba(244,63,94,0.22)]"
+                : "border-slate-200 dark:border-emerald-500/30 shadow-[0_12px_45px_rgba(0,0,0,0.15)] dark:shadow-[0_12px_45px_rgba(0,0,0,0.85)]"
             } backdrop-blur-2xl px-3 sm:px-5 py-2.5 sm:py-3 text-slate-800 dark:text-slate-200 transition-colors duration-300`}
           >
             {/* Top Slim Progress Bar Indicator */}
@@ -922,16 +1105,282 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
               />
             </div>
 
-            <div className="flex items-center justify-between gap-2 sm:gap-6 pt-1">
+            {/* ========================================================================= */}
+            {/* MOBILE LAYOUT (< md)                                                      */}
+            {/* ========================================================================= */}
+            <div className="flex md:hidden flex-col gap-2 pt-1">
+              {/* Mobile Row 1: Track Info & Quick Actions */}
+              <div className="flex items-center justify-between gap-2">
+                {/* Track Info (Thumb + Title + Artist + Badge) */}
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  {/* Album Cover with Real-time Beat Equalizer */}
+                  <div className="relative w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 shadow-sm">
+                    {activeThumbnail ? (
+                      <img
+                        src={activeThumbnail}
+                        alt={activeTitle}
+                        className={`w-full h-full object-cover transition-transform duration-300 ${isPlaying ? "scale-110" : ""}`}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-emerald-100 to-slate-100 dark:from-emerald-950 dark:to-slate-900 text-emerald-600 dark:text-emerald-400">
+                        <Music className="w-4 h-4" />
+                      </div>
+                    )}
+                    {isPlaying && !hasError && (
+                      <div className="absolute inset-0 bg-black/30 backdrop-blur-[0.5px] flex items-center justify-center">
+                        <div className="flex items-end gap-[1.5px] h-3.5">
+                          <span
+                            className="w-[2.5px] rounded-full transition-all duration-75"
+                            style={{
+                              height: `${beatHeights[0]}px`,
+                              backgroundColor: isYouTubeMode ? "#f43f5e" : "#10b981",
+                            }}
+                          />
+                          <span
+                            className="w-[2.5px] rounded-full transition-all duration-75"
+                            style={{
+                              height: `${beatHeights[1]}px`,
+                              backgroundColor: isYouTubeMode ? "#f43f5e" : "#10b981",
+                            }}
+                          />
+                          <span
+                            className="w-[2.5px] rounded-full transition-all duration-75"
+                            style={{
+                              height: `${beatHeights[2]}px`,
+                              backgroundColor: isYouTubeMode ? "#f43f5e" : "#10b981",
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Title & Artist & Badge */}
+                  <div className="min-w-0 flex-1">
+                    <h4
+                      className={`font-bold text-xs text-slate-900 dark:text-white truncate ${
+                        isYouTubeMode ? "hover:text-rose-600 dark:hover:text-rose-400" : "hover:text-emerald-600 dark:hover:text-emerald-400"
+                      }`}
+                    >
+                      {activeTitle}
+                    </h4>
+                    <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                      <span className="truncate max-w-[100px] font-medium text-slate-700 dark:text-slate-300">
+                        {activeArtist}
+                      </span>
+                      <span className="inline-block w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600 shrink-0" />
+                      {isBuffering ? (
+                        <span className="shrink-0 flex items-center gap-0.5 text-[9px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-1 py-0.2 rounded border border-amber-200 dark:border-amber-500/20 animate-pulse">
+                          <Loader2 className="w-2.5 h-2.5 animate-spin" /> Buffering...
+                        </span>
+                      ) : isYouTubeMode ? (
+                        <span className="shrink-0 flex items-center gap-0.5 font-semibold text-rose-600 dark:text-rose-400 text-[9px] bg-rose-50 dark:bg-rose-500/15 px-1 py-0.2 rounded border border-rose-200 dark:border-rose-500/30">
+                          <ShieldCheck className="w-2.5 h-2.5 text-rose-500 animate-pulse" /> Bebas Iklan
+                        </span>
+                      ) : (
+                        <span className="shrink-0 flex items-center gap-0.5 font-semibold text-emerald-600 dark:text-emerald-400 text-[9px] bg-emerald-50 dark:bg-emerald-500/10 px-1 py-0.2 rounded border border-emerald-200 dark:border-emerald-500/20">
+                          <Radio className="w-2 h-2 text-emerald-600 animate-pulse" /> Live
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Mobile Actions: Mute Toggle, Video toggle, Queue, Close */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={handleToggleMute}
+                    className={`btn-icon p-1.5 rounded-xl border text-xs transition-colors ${
+                      isMuted || volume === 0
+                        ? "bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-500/40 shadow-sm"
+                        : "bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800"
+                    }`}
+                    title={isMuted || volume === 0 ? "Bunyikan (Unmute)" : "Bisukan (Mute)"}
+                  >
+                    {isMuted || volume === 0 ? (
+                      <VolumeX className="w-3.5 h-3.5 text-rose-500" />
+                    ) : (
+                      <Volume2 className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+
+                  {isVideoFormat && (
+                    <button
+                      onClick={() => setShowVideoPreview(!showVideoPreview)}
+                      className={`btn-icon btn-icon-wiggle p-1.5 rounded-xl border text-xs ${
+                        showVideoPreview
+                          ? isYouTubeMode
+                            ? "bg-rose-50 dark:bg-rose-500/20 text-rose-600 border-rose-200 dark:border-rose-500/40 shadow-sm"
+                            : "bg-cyan-50 dark:bg-cyan-500/20 text-cyan-600 border-cyan-200 dark:border-cyan-500/40 shadow-sm"
+                          : "bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800"
+                      }`}
+                      title="Tampilkan / Sembunyikan Video"
+                    >
+                      <Film className={`w-3.5 h-3.5 ${isYouTubeMode ? "text-rose-500" : "text-cyan-600"}`} />
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => setIsQueueOpen(!isQueueOpen)}
+                    className={`btn-icon btn-icon-bounce-y p-1.5 rounded-xl border text-xs relative ${
+                      isQueueOpen
+                        ? isYouTubeMode
+                          ? "bg-rose-50 dark:bg-rose-500/20 text-rose-600 border-rose-200 dark:border-rose-500/40 shadow-sm"
+                          : "bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 border-emerald-200 dark:border-emerald-500/40 shadow-sm"
+                        : "bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800"
+                    }`}
+                    title="Daftar Putar"
+                  >
+                    <ListMusic className="w-3.5 h-3.5" />
+                    {playlist.length > 0 && (
+                      <span className="absolute -top-1 -right-1 px-1 min-w-[14px] h-[14px] text-[8px] font-bold rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center">
+                        {playlist.length}
+                      </span>
+                    )}
+                  </button>
+
+                  {onClosePlayer && (
+                    <button
+                      onClick={onClosePlayer}
+                      className="btn-icon btn-icon-close p-1.5 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      title="Tutup pemutar musik"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Mobile Row 2: Seekbar & Timers (Full Width Touch Target) */}
+              <div className="w-full flex items-center gap-2 text-[10px] font-mono text-slate-500 dark:text-slate-400 px-0.5">
+                <span className="w-8 text-right text-slate-700 dark:text-slate-300 shrink-0">
+                  {formatDuration(currentTime)}
+                </span>
+                <div className="relative flex-1 flex items-center">
+                  <input
+                    type="range"
+                    min={0}
+                    max={duration > 0 ? duration : 100}
+                    value={currentTime}
+                    onChange={handleSeek}
+                    className={`w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer ${
+                      isYouTubeMode ? "accent-rose-500 dark:accent-rose-400" : "accent-emerald-500 dark:accent-emerald-400"
+                    } focus:outline-none`}
+                  />
+                </div>
+                <span className="w-8 text-left shrink-0">
+                  {duration > 0 ? formatDuration(duration) : "--:--"}
+                </span>
+              </div>
+
+              {/* Mobile Row 3: Playback Controls (Shuffle, Prev, Play, Next, Repeat, Speed) */}
+              <div className="flex items-center justify-between px-1 pt-0.5">
+                {/* Shuffle */}
+                <button
+                  onClick={handleShuffleToggle}
+                  className={`btn-icon btn-icon-wiggle p-2 rounded-xl transition-all ${
+                    activeShuffle
+                      ? isYouTubeMode
+                        ? "bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/40"
+                        : "bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/40"
+                      : "text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                  }`}
+                  title={activeShuffle ? t.player.shuffleOn : t.player.shuffleOff}
+                >
+                  <Shuffle className="w-4 h-4" />
+                </button>
+
+                {/* Prev */}
+                <button
+                  onClick={onPrevTrack}
+                  className="btn-icon btn-icon-bounce-x p-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  title="Lagu Sebelumnya"
+                >
+                  <SkipBack className="w-5 h-5 fill-current" />
+                </button>
+
+                {/* Primary Play / Pause */}
+                <button
+                  onClick={onTogglePlay}
+                  className={`btn-icon flex items-center justify-center w-11 h-11 rounded-full ${
+                    isYouTubeMode
+                      ? "bg-gradient-to-tr from-rose-500 to-red-500 shadow-rose-500/30 text-white shadow-lg"
+                      : "bg-gradient-to-tr from-emerald-500 to-teal-400 shadow-emerald-500/30 text-slate-950 shadow-lg"
+                  } font-bold hover:scale-105 active:scale-95 transition-transform`}
+                >
+                  {isBuffering ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : isPlaying ? (
+                    <Pause className="w-5 h-5 fill-current" />
+                  ) : (
+                    <Play className="w-5 h-5 fill-current ml-0.5" />
+                  )}
+                </button>
+
+                {/* Next */}
+                <button
+                  onClick={onNextTrack}
+                  className="btn-icon btn-icon-bounce-x p-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  title="Lagu Berikutnya"
+                >
+                  <SkipForward className="w-5 h-5 fill-current" />
+                </button>
+
+                {/* Repeat */}
+                <button
+                  onClick={handleRepeatToggle}
+                  className={`btn-icon btn-icon-spin p-2 rounded-xl transition-all ${
+                    activeRepeat !== "off"
+                      ? isYouTubeMode
+                        ? "bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/40"
+                        : "bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/40"
+                      : "text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                  }`}
+                  title={
+                    activeRepeat === "one"
+                      ? t.player.repeatOne
+                      : activeRepeat === "all"
+                      ? t.player.repeatAll
+                      : t.player.repeatOff
+                  }
+                >
+                  {activeRepeat === "one" ? (
+                    <Repeat1 className="w-4 h-4" />
+                  ) : (
+                    <Repeat className="w-4 h-4" />
+                  )}
+                </button>
+
+                {/* Speed toggle */}
+                <button
+                  onClick={cycleSpeed}
+                  className={`btn-interactive px-2 py-1 rounded-lg text-slate-600 dark:text-slate-400 font-mono text-[10px] font-bold border border-slate-200 dark:border-slate-800 ${
+                    playbackRate !== 1
+                      ? isYouTubeMode
+                        ? "text-rose-600 dark:text-rose-400 border-rose-300 dark:border-rose-500/40 font-black"
+                        : "text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-500/40 font-black"
+                      : ""
+                  }`}
+                  title={t.player.speed}
+                >
+                  {playbackRate}x
+                </button>
+              </div>
+            </div>
+
+            {/* ========================================================================= */}
+            {/* DESKTOP & TABLET LAYOUT (hidden md:flex)                                  */}
+            {/* ========================================================================= */}
+            <div className="hidden md:flex items-center justify-between gap-4 lg:gap-6 pt-1">
               {/* Left Track Info */}
-              <div className="flex items-center gap-3 min-w-0 max-w-[240px] sm:max-w-[320px]">
+              <div className="flex items-center gap-3 min-w-0 max-w-[240px] lg:max-w-[320px]">
                 {/* Album Cover / Disc with Real-time Reactive Equalizer */}
-                <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden shrink-0 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 shadow-md">
+                <div className="relative w-11 h-11 lg:w-12 lg:h-12 rounded-2xl overflow-hidden shrink-0 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 shadow-md">
                   {activeThumbnail ? (
                     <img
                       src={activeThumbnail}
                       alt={activeTitle}
-                      className={`w-full h-full object-cover ${isPlaying ? "scale-105" : ""}`}
+                      className={`w-full h-full object-cover transition-transform duration-300 ${isPlaying ? "scale-110" : ""}`}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-emerald-100 to-slate-100 dark:from-emerald-950 dark:to-slate-900 text-emerald-600 dark:text-emerald-400">
@@ -970,7 +1419,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                 {/* Name, Artist, Source & Badge */}
                 <div className="min-w-0">
                   <h4
-                    className={`font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate ${
+                    className={`font-bold text-xs lg:text-sm text-slate-900 dark:text-white truncate ${
                       isYouTubeMode ? "hover:text-rose-600 dark:hover:text-rose-400" : "hover:text-emerald-600 dark:hover:text-emerald-400"
                     } transition-colors`}
                   >
@@ -987,7 +1436,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                       </span>
                     ) : isYouTubeMode ? (
                       <span className="flex items-center gap-1 font-semibold text-rose-600 dark:text-rose-400 text-[10px] bg-rose-50 dark:bg-rose-500/15 px-1.5 py-0.2 rounded border border-rose-200 dark:border-rose-500/30">
-                        <ShieldCheck className="w-2.5 h-2.5 text-rose-500 dark:text-rose-400" /> {t.player.adFreeTag}
+                        <ShieldCheck className="w-2.5 h-2.5 text-rose-500 animate-pulse" /> {t.player.adFreeTag}
                       </span>
                     ) : (
                       <span className="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400 text-[10px] bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-500/20">
@@ -1005,7 +1454,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                   {/* Dedicated Shuffle Button */}
                   <button
                     onClick={handleShuffleToggle}
-                    className={`relative p-2 rounded-xl transition-all cursor-pointer ${
+                    className={`btn-icon btn-icon-wiggle relative p-2 rounded-xl transition-all ${
                       activeShuffle
                         ? isYouTubeMode
                           ? "bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/40 shadow-sm"
@@ -1027,7 +1476,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                   {/* Previous Track */}
                   <button
                     onClick={onPrevTrack}
-                    className="p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 active:scale-95 transition-all cursor-pointer"
+                    className="btn-icon btn-icon-bounce-x p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80"
                   >
                     <SkipBack className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
                   </button>
@@ -1035,11 +1484,11 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                   {/* Play / Pause Primary */}
                   <button
                     onClick={onTogglePlay}
-                    className={`flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full ${
+                    className={`btn-icon flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full ${
                       isYouTubeMode
-                        ? "bg-gradient-to-tr from-rose-500 to-red-500 shadow-rose-500/30 text-white"
-                        : "bg-gradient-to-tr from-emerald-500 to-teal-400 shadow-emerald-500/30 text-slate-950"
-                    } font-bold shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer`}
+                        ? "bg-gradient-to-tr from-rose-500 to-red-500 shadow-rose-500/30 text-white shadow-lg"
+                        : "bg-gradient-to-tr from-emerald-500 to-teal-400 shadow-emerald-500/30 text-slate-950 shadow-lg"
+                    } font-bold hover:scale-105 active:scale-95 transition-transform`}
                   >
                     {isBuffering ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -1053,7 +1502,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                   {/* Next Track */}
                   <button
                     onClick={onNextTrack}
-                    className="p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 active:scale-95 transition-all cursor-pointer"
+                    className="btn-icon btn-icon-bounce-x p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80"
                   >
                     <SkipForward className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
                   </button>
@@ -1061,7 +1510,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                   {/* Dedicated Repeat Mode Button */}
                   <button
                     onClick={handleRepeatToggle}
-                    className={`p-2 rounded-xl transition-all cursor-pointer ${
+                    className={`btn-icon btn-icon-spin p-2 rounded-xl transition-all ${
                       activeRepeat !== "off"
                         ? isYouTubeMode
                           ? "bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/40 shadow-sm"
@@ -1088,9 +1537,9 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                   {/* Speed toggle */}
                   <button
                     onClick={cycleSpeed}
-                    className={`px-2 py-1 rounded-lg text-slate-600 dark:text-slate-400 ${
+                    className={`btn-interactive px-2 py-1 rounded-lg text-slate-600 dark:text-slate-400 ${
                       isYouTubeMode ? "hover:text-rose-600 dark:hover:text-rose-300" : "hover:text-emerald-600 dark:hover:text-emerald-300"
-                    } hover:bg-slate-100 dark:hover:bg-slate-800/80 font-mono text-[10px] font-bold border border-slate-200 dark:border-slate-700/60 cursor-pointer`}
+                    } hover:bg-slate-100 dark:hover:bg-slate-800/80 font-mono text-[10px] font-bold border border-slate-200 dark:border-slate-700/60`}
                     title={t.player.speed}
                   >
                     {playbackRate}x
@@ -1122,7 +1571,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                 {isYouTubeMode ? (
                   <button
                     onClick={handleSwitchToTeraBox}
-                    className="hidden xl:flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-600 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 text-[11px] border border-slate-200 dark:border-slate-700/60 transition-colors cursor-pointer"
+                    className="btn-icon btn-icon-wiggle hidden xl:flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-600 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 text-[11px] border border-slate-200 dark:border-slate-700/60 transition-colors"
                     title="Coba beralih ke stream TeraBox"
                   >
                     <Radio className="w-3 h-3" />
@@ -1132,7 +1581,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                   <button
                     onClick={triggerYouTubeFallback}
                     disabled={isSearchingFallback}
-                    className="hidden xl:flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 hover:bg-rose-50 dark:bg-slate-900 dark:hover:bg-rose-950/40 text-slate-600 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 text-[11px] border border-slate-200 dark:border-slate-700/60 transition-colors cursor-pointer"
+                    className="btn-icon btn-icon-wiggle hidden xl:flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 dark:bg-slate-900 dark:hover:bg-rose-950/40 text-slate-600 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 text-[11px] border border-slate-200 dark:border-slate-700/60 transition-colors"
                     title="Putar versi YouTube Bebas Iklan"
                   >
                     <Youtube className="w-3 h-3 text-rose-500 dark:text-rose-400" />
@@ -1145,6 +1594,8 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                   <AudioVisualizer
                     isPlaying={isPlaying && !isBuffering && !hasError}
                     audioElement={mediaRef.current}
+                    currentTime={currentTime}
+                    volume={isMuted ? 0 : volume}
                     barCount={18}
                     height={30}
                     theme={isYouTubeMode ? "rose" : "emerald"}
@@ -1155,9 +1606,9 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                 {/* Volume Slider */}
                 <div className="hidden md:flex items-center gap-2">
                   <button
-                    onClick={() => setIsMuted(!isMuted)}
-                    className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
-                    title={isMuted ? "Unmute" : "Mute"}
+                    onClick={handleToggleMute}
+                    className="btn-icon p-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    title={isMuted || volume === 0 ? "Bunyikan (Unmute)" : "Bisukan (Mute)"}
                   >
                     {isMuted || volume === 0 ? (
                       <VolumeX className="w-4 h-4 text-rose-500 dark:text-rose-400" />
@@ -1173,10 +1624,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                     max={1}
                     step={0.01}
                     value={isMuted ? 0 : volume}
-                    onChange={(e) => {
-                      setVolume(parseFloat(e.target.value));
-                      setIsMuted(false);
-                    }}
+                    onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
                     className={`w-16 sm:w-20 h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer ${
                       isYouTubeMode ? "accent-rose-500 dark:accent-rose-400" : "accent-emerald-500 dark:accent-emerald-400"
                     }`}
@@ -1187,7 +1635,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                 {isVideoFormat && (
                   <button
                     onClick={() => setShowVideoPreview(!showVideoPreview)}
-                    className={`p-2 rounded-xl transition-all text-xs flex items-center gap-1.5 border cursor-pointer ${
+                    className={`btn-icon btn-icon-wiggle p-2 rounded-xl text-xs flex items-center gap-1.5 border ${
                       showVideoPreview
                         ? isYouTubeMode
                           ? "bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 border-rose-200 dark:border-rose-500/40 shadow-sm"
@@ -1204,7 +1652,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                 {/* Playlist Queue Button */}
                 <button
                   onClick={() => setIsQueueOpen(!isQueueOpen)}
-                  className={`p-2 rounded-xl transition-all text-xs flex items-center gap-1.5 border cursor-pointer ${
+                  className={`btn-icon btn-icon-bounce-y p-2 rounded-xl text-xs flex items-center gap-1.5 border relative ${
                     isQueueOpen
                       ? isYouTubeMode
                         ? "bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 border-rose-200 dark:border-rose-500/40 shadow-sm"
@@ -1222,7 +1670,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                   <a
                     href={currentTrack.downloadUrl}
                     download={currentTrack.name}
-                    className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 hover:text-emerald-600 dark:text-slate-300 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-700/60 transition-all cursor-pointer"
+                    className="btn-icon btn-icon-bounce-y p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 hover:text-emerald-600 dark:text-slate-300 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-700/60"
                     title={`Download ${currentTrack.name}`}
                   >
                     <Download className="w-4 h-4" />
@@ -1233,7 +1681,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                 {onClosePlayer && (
                   <button
                     onClick={onClosePlayer}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
+                    className="btn-icon btn-icon-close p-1.5 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                     title="Tutup pemutar musik"
                   >
                     <X className="w-4 h-4" />
