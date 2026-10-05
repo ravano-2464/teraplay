@@ -110,47 +110,49 @@ export const YouTubeSearchSection: React.FC<YouTubeSearchSectionProps> = ({
             <div className="flex flex-col sm:flex-row items-stretch gap-2.5">
               <div className="relative flex-1 group">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none z-10 text-slate-400 dark:text-rose-400/80 transition-colors">
-                  <Search className="w-5 h-5 drop-shadow-sm" />
+                  <Search className="w-5 h-5 drop-shadow-sm group-hover:scale-110 transition-transform duration-200" />
                 </div>
                 <input
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={t.youtube.placeholder}
-                  className="w-full pl-11 pr-28 py-3.5 rounded-2xl glass-input text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 border border-slate-300 dark:border-slate-700/80 focus:border-red-500 focus:ring-2 focus:ring-red-500/30 transition-all shadow-inner"
+                  className="w-full pl-11 pr-28 sm:pr-32 py-3.5 rounded-2xl glass-input text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 border border-slate-300 dark:border-slate-700/80 focus:border-red-500 focus:ring-2 focus:ring-red-500/30 transition-all shadow-inner"
                   suppressHydrationWarning
                 />
 
-                {query && (
+                <div className="absolute inset-y-1.5 right-1.5 flex items-center gap-1 z-10">
+                  {query && (
+                    <button
+                      type="button"
+                      onClick={() => setQuery("")}
+                      className="btn-icon btn-icon-close p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition-colors"
+                      title="Hapus teks"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+
                   <button
                     type="button"
-                    onClick={() => setQuery("")}
-                    className="btn-icon btn-icon-close absolute inset-y-0 right-20 flex items-center pr-2 text-slate-400 hover:text-rose-500"
-                    title="Hapus pencarian"
+                    suppressHydrationWarning
+                    onClick={handlePaste}
+                    className="btn-icon btn-icon-bounce-y px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900/90 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white text-xs font-medium border border-slate-200 dark:border-slate-700/60 flex items-center gap-1.5 shadow-sm transition-all"
+                    title="Tempel dari papan klip"
                   >
-                    <X className="w-4 h-4" />
+                    {copiedSuccess ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
+                        <span className="text-emerald-600 dark:text-emerald-400">{t.teraboxInput.pastedBtn}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Clipboard className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{t.teraboxInput.pasteBtn}</span>
+                      </>
+                    )}
                   </button>
-                )}
-
-                <button
-                  type="button"
-                  suppressHydrationWarning
-                  onClick={handlePaste}
-                  className="btn-icon btn-icon-bounce-y absolute inset-y-1.5 right-1.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900/90 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white text-xs font-medium border border-slate-200 dark:border-slate-700/60 flex items-center gap-1.5 shadow-sm"
-                  title="Paste from clipboard"
-                >
-                  {copiedSuccess ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
-                      <span className="text-emerald-600 dark:text-emerald-400">{t.teraboxInput.pastedBtn}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Clipboard className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{t.teraboxInput.pasteBtn}</span>
-                    </>
-                  )}
-                </button>
+                </div>
               </div>
 
               <button

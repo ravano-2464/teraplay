@@ -13,6 +13,7 @@ import {
   Check,
   FileText,
   Upload,
+  X,
 } from "lucide-react";
 import { useI18n } from "@/context/I18nContext";
 
@@ -117,29 +118,43 @@ export const LinkInputSection: React.FC<LinkInputSectionProps> = ({
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder={t.teraboxInput.placeholder}
-                  className="w-full pl-11 pr-24 py-3.5 rounded-2xl glass-input text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 border border-slate-300 dark:border-slate-700/80 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 transition-all shadow-inner"
+                  className="w-full pl-11 pr-28 sm:pr-32 py-3.5 rounded-2xl glass-input text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 border border-slate-300 dark:border-slate-700/80 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 transition-all shadow-inner"
                   required
                   suppressHydrationWarning
                 />
-                <button
-                  type="button"
-                  suppressHydrationWarning
-                  onClick={handlePaste}
-                  className="btn-icon btn-icon-bounce-y absolute inset-y-1.5 right-1.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900/90 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white text-xs font-medium border border-slate-200 dark:border-slate-700/60 flex items-center gap-1.5 shadow-sm"
-                  title="Paste from clipboard"
-                >
-                  {copiedSuccess ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
-                      <span className="text-emerald-600 dark:text-emerald-400">{t.teraboxInput.pastedBtn}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Clipboard className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{t.teraboxInput.pasteBtn}</span>
-                    </>
+
+                <div className="absolute inset-y-1.5 right-1.5 flex items-center gap-1 z-10">
+                  {url && (
+                    <button
+                      type="button"
+                      onClick={() => setUrl("")}
+                      className="btn-icon btn-icon-close p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition-colors"
+                      title="Hapus tautan"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   )}
-                </button>
+
+                  <button
+                    type="button"
+                    suppressHydrationWarning
+                    onClick={handlePaste}
+                    className="btn-icon btn-icon-bounce-y px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900/90 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white text-xs font-medium border border-slate-200 dark:border-slate-700/60 flex items-center gap-1.5 shadow-sm transition-all"
+                    title="Paste from clipboard"
+                  >
+                    {copiedSuccess ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
+                        <span className="text-emerald-600 dark:text-emerald-400">{t.teraboxInput.pastedBtn}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Clipboard className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{t.teraboxInput.pasteBtn}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <button
