@@ -101,6 +101,12 @@ export const english: Translations = {
     adFreeTag: "⚡ 100% Ad-Free",
     openVideo: "Open Video Window",
     closePlayer: "Close Player",
+    backgroundPlay: "Background Play",
+    backgroundActive: "Background Play Active",
+    backgroundDesc: "Music keeps playing when screen is locked or while multitasking in other apps.",
+    wakeLockOn: "Screen Awake: ON",
+    wakeLockOff: "Screen Awake: OFF",
+    pipButton: "Picture-in-Picture (PiP)",
   },
   videoModal: {
     title: "Video Player",

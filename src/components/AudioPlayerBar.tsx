@@ -29,11 +29,22 @@ import {
   GripHorizontal,
   Youtube,
   ShieldCheck,
+  Smartphone,
+  Headphones,
+  Sun,
+  SunDim,
+  PictureInPicture2,
+  Info,
+  CheckCircle2,
+  Lock,
+  Zap,
 } from "lucide-react";
 import { AudioTrack, PlaybackMode } from "@/types/terabox";
 import { formatDuration } from "@/lib/formatters";
 import { AudioVisualizer } from "./AudioVisualizer";
 import { useI18n } from "../context/I18nContext";
+import { useMediaSession } from "@/hooks/useMediaSession";
+import { useWakeLock } from "@/hooks/useWakeLock";
 
 interface AudioPlayerBarProps {
   playlist: AudioTrack[];
@@ -75,7 +86,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   onToggleRepeat,
 }) => {
   const { t } = useI18n();
-  const mediaRef = useRef<HTMLVideoElement | null>(null);
+  const mediaRef = useRef<HTMLMediaElement | null>(null);
   const ytIframeRef = useRef<HTMLIFrameElement | null>(null);
   const playPromiseRef = useRef<Promise<void> | null>(null);
 
@@ -86,6 +97,8 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
   const prevVolumeRef = useRef(0.85);
   const [internalShuffle, setInternalShuffle] = useState(false);
   const [internalRepeat, setInternalRepeat] = useState<"all" | "one" | "off">("all");
+  const [isBgInfoOpen, setIsBgInfoOpen] = useState(false);
+  const { isSupported: isWakeLockSupported, isLocked: isWakeLockActive, toggleWakeLock } = useWakeLock();
 
   // Handle user volume slider changes
   const handleVolumeChange = useCallback((newVol: number) => {
@@ -804,12 +817,54 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
     }
   };
 
+  const activeTitle = (isYouTubeMode && ytTrack?.title ? ytTrack.title : currentTrack?.name) || "TeraPlay Audio";
+  const activeArtist = (isYouTubeMode && ytTrack?.channel ? ytTrack.channel : currentTrack?.artist) || "TeraBox Music";
+  const activeThumbnail = (isYouTubeMode && ytTrack?.thumbnailUrl) || currentTrack?.thumbnailUrl || "/icon.svg";
+
+  // Native Web MediaSession API Hook for Lock Screen, Smartwatch & Bluetooth earphone controls
+  useMediaSession({
+    title: activeTitle,
+    artist: activeArtist,
+    album: currentTrack?.album || (isYouTubeMode ? "YouTube (Bebas Iklan)" : "TeraPlay Audio"),
+    artworkUrl: activeThumbnail,
+    duration,
+    currentTime,
+    isPlaying,
+    playbackRate,
+    onPlay: () => {
+      setPlayingState(true);
+    },
+    onPause: () => {
+      setPlayingState(false);
+    },
+    onNextTrack,
+    onPrevTrack,
+    onSeek: (newTime: number) => {
+      setCurrentTime(newTime);
+      if (isYouTubeMode) {
+        sendYtCommand("seekTo", [newTime, true]);
+      } else if (mediaRef.current) {
+        mediaRef.current.currentTime = newTime;
+      }
+    },
+  });
+
+  const handleTogglePiP = useCallback(async () => {
+    if (typeof document === "undefined") return;
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+      } else if (mediaRef.current instanceof HTMLVideoElement && document.pictureInPictureEnabled) {
+        await mediaRef.current.requestPictureInPicture();
+      }
+    } catch (err) {
+      console.warn("PiP toggle error:", err);
+    }
+  }, []);
+
   if (!currentTrack) return null;
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
-  const activeTitle = isYouTubeMode && ytTrack?.title ? ytTrack.title : currentTrack.name;
-  const activeArtist = isYouTubeMode && ytTrack?.channel ? ytTrack.channel : currentTrack.artist || "TeraBox Music";
-  const activeThumbnail = (isYouTubeMode && ytTrack?.thumbnailUrl) || currentTrack.thumbnailUrl;
 
   return (
     <>
@@ -858,6 +913,13 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
             </div>
             <div className="flex items-center gap-1 shrink-0">
               <button
+                onClick={handleTogglePiP}
+                className="btn-icon p-1 rounded text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800"
+                title={t.player.pipButton || "Picture-in-Picture (Layar Melayang)"}
+              >
+                <PictureInPicture2 className="w-3.5 h-3.5" />
+              </button>
+              <button
                 onClick={() => setVideoSize(videoSize === "large" ? "normal" : "large")}
                 className="btn-icon p-1 rounded text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800"
                 title={videoSize === "large" ? "Perkecil ukuran" : "Perbesar ukuran"}
@@ -900,7 +962,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
             />
           ) : (
             <video
-              ref={mediaRef}
+              ref={mediaRef as React.RefObject<HTMLVideoElement>}
               preload="metadata"
               playsInline
               onTimeUpdate={handleTimeUpdate}
@@ -931,11 +993,11 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
         </div>
       </div>
 
-      {/* Hidden HTML5 Video Player element when not in mini-video and not in YouTube mode */}
+      {/* Hidden HTML5 Audio Player element when not in mini-video and not in YouTube mode */}
       {!isYouTubeMode && !showVideoPreview && (
-        <video
-          ref={mediaRef}
-          preload="metadata"
+        <audio
+          ref={mediaRef as React.RefObject<HTMLAudioElement>}
+          preload="auto"
           playsInline
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
@@ -1164,8 +1226,8 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                     >
                       {activeTitle}
                     </h4>
-                    <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                      <span className="truncate max-w-[100px] font-medium text-slate-700 dark:text-slate-300">
+                    <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-500 dark:text-slate-400 truncate flex-wrap">
+                      <span className="truncate max-w-[85px] font-medium text-slate-700 dark:text-slate-300">
                         {activeArtist}
                       </span>
                       <span className="inline-block w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600 shrink-0" />
@@ -1182,12 +1244,34 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                           <Radio className="w-2 h-2 text-emerald-600 animate-pulse" /> Live
                         </span>
                       )}
+                      <button
+                        onClick={() => setIsBgInfoOpen(true)}
+                        className="shrink-0 flex items-center gap-1 font-semibold text-sky-700 dark:text-sky-300 text-[9px] bg-sky-50 dark:bg-sky-500/15 px-1.5 py-0.2 rounded-md border border-sky-200 dark:border-sky-500/30 active:scale-95 transition-transform"
+                        title="Mode Latar Belakang Aktif. Klik untuk info lengkap."
+                      >
+                        <Smartphone className="w-2.5 h-2.5 text-sky-600 dark:text-sky-400 animate-pulse" />
+                        <span>Latar Belakang</span>
+                      </button>
                     </div>
                   </div>
                 </div>
 
-                {/* Right Mobile Actions: Mute Toggle, Video toggle, Queue, Close */}
+                {/* Right Mobile Actions: WakeLock, Mute Toggle, Video toggle, Queue, Close */}
                 <div className="flex items-center gap-1 shrink-0">
+                  {isWakeLockSupported && (
+                    <button
+                      onClick={toggleWakeLock}
+                      className={`btn-icon p-1.5 rounded-xl border text-xs transition-colors ${
+                        isWakeLockActive
+                          ? "bg-amber-50 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-500/40 shadow-sm"
+                          : "bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800"
+                      }`}
+                      title={isWakeLockActive ? "Layar Tetap Hidup: AKTIF (Layar tidak akan otomatis mati)" : "Layar Tetap Hidup: NONAKTIF"}
+                    >
+                      <Sun className={`w-3.5 h-3.5 ${isWakeLockActive ? "text-amber-500 fill-amber-500" : ""}`} />
+                    </button>
+                  )}
+
                   <button
                     onClick={handleToggleMute}
                     className={`btn-icon p-1.5 rounded-xl border text-xs transition-colors ${
@@ -1631,6 +1715,32 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                   />
                 </div>
 
+                {/* Wake Lock Toggle Button (Desktop) */}
+                {isWakeLockSupported && (
+                  <button
+                    onClick={toggleWakeLock}
+                    className={`btn-icon btn-icon-wiggle p-2 rounded-xl text-xs flex items-center gap-1.5 border transition-colors ${
+                      isWakeLockActive
+                        ? "bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/40 shadow-sm font-bold"
+                        : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700/60"
+                    }`}
+                    title={isWakeLockActive ? t.player.wakeLockOn || "Layar Tetap Hidup: AKTIF" : t.player.wakeLockOff || "Layar Tetap Hidup: MATI"}
+                  >
+                    <Sun className={`w-4 h-4 ${isWakeLockActive ? "text-amber-500 fill-amber-500 animate-spin-slow" : "text-slate-500"}`} />
+                    <span className="hidden xl:inline">{isWakeLockActive ? "Layar Hidup" : "Layar Auto"}</span>
+                  </button>
+                )}
+
+                {/* Background Play Info Button (Desktop) */}
+                <button
+                  onClick={() => setIsBgInfoOpen(true)}
+                  className="btn-icon btn-icon-wiggle p-2 rounded-xl text-xs flex items-center gap-1.5 border bg-slate-100 hover:bg-sky-50 dark:bg-slate-900 dark:hover:bg-sky-950/40 text-slate-700 hover:text-sky-700 dark:text-slate-300 dark:hover:text-sky-300 border-slate-200 dark:border-slate-700/60 transition-colors"
+                  title="Panduan Putar Latar Belakang & Sinkronisasi Lock Screen"
+                >
+                  <Smartphone className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+                  <span className="hidden xl:inline font-semibold">Latar Belakang</span>
+                </button>
+
                 {/* Video Preview Toggle Button */}
                 {isVideoFormat && (
                   <button
@@ -1692,6 +1802,142 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Background Playback Info & Mobile Capability Modal */}
+      {isBgInfoOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md modal-backdrop-animate">
+          <div className="relative w-full max-w-lg rounded-3xl glass-panel bg-white/98 dark:bg-slate-950/95 border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden modal-content-animate flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-white/10 bg-gradient-to-r from-sky-500/10 via-emerald-500/10 to-indigo-500/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-500 to-emerald-500 text-white flex items-center justify-center shadow-lg shadow-sky-500/20">
+                  <Smartphone className="w-5 h-5 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>Fitur Putar Latar Belakang</span>
+                    <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-300 dark:border-emerald-500/30">
+                      Aktif
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Panduan lengkap memutar musik saat layar HP mati & multitasking
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsBgInfoOpen(false)}
+                className="btn-icon btn-icon-close p-2 rounded-2xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs">
+              {/* Status Card */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 border border-emerald-200 dark:border-emerald-500/30 flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-bold text-slate-900 dark:text-white text-xs">
+                    Web MediaSession & Background Audio Siap
+                  </h4>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                    Aplikasi ini otomatis menyinkronkan lagu yang sedang diputar dengan sistem operasi HP Anda (Android Chrome / iOS Safari / Samsung Internet).
+                  </p>
+                </div>
+              </div>
+
+              {/* 4 Feature Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Card 1: Lock Screen */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/5 space-y-1.5">
+                  <div className="flex items-center gap-2 text-sky-600 dark:text-sky-400 font-bold">
+                    <Lock className="w-4 h-4" />
+                    <span>Kontrol Layar Kunci</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Lagu dapat di-pause, di-play, diganti, dan diatur posisi durasinya langsung dari Lock Screen & panel notifikasi HP.
+                  </p>
+                </div>
+
+                {/* Card 2: Bluetooth & Smartwatch */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/5 space-y-1.5">
+                  <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold">
+                    <Headphones className="w-4 h-4" />
+                    <span>TWS & Smartwatch</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Mendukung tombol sentuh earphone nirkabel, AirPods, smartwatch, dan Bluetooth mobil untuk mengontrol playlist.
+                  </p>
+                </div>
+
+                {/* Card 3: Multitasking */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/5 space-y-1.5">
+                  <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold">
+                    <Zap className="w-4 h-4" />
+                    <span>Multitasking Lancar</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Musik tetap berjalan tanpa terputus saat Anda membuka WhatsApp, Instagram, membaca artikel, atau mengunci HP.
+                  </p>
+                </div>
+
+                {/* Card 4: Screen Wake Lock */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-white/5 space-y-1.5">
+                  <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-bold">
+                    <Sun className="w-4 h-4" />
+                    <span>Layar Tetap Hidup</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Gunakan fitur Layar Tetap Hidup jika ingin melihat lirik atau visualizer lagu tanpa takut layar HP otomatis mati.
+                  </p>
+                </div>
+              </div>
+
+              {/* Wake Lock Quick Toggle Row */}
+              {isWakeLockSupported && (
+                <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <Sun className={`w-4 h-4 ${isWakeLockActive ? "text-amber-500 fill-amber-500 animate-spin-slow" : "text-slate-400"}`} />
+                    <div>
+                      <span className="font-bold text-slate-900 dark:text-white block text-xs">
+                        Layar Tetap Hidup (Screen Wake Lock)
+                      </span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                        {isWakeLockActive ? "Layar tidak akan otomatis mati saat lagu diputar." : "Layar dapat meredup dan tidur secara normal."}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={toggleWakeLock}
+                    className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-colors shadow-sm ${
+                      isWakeLockActive
+                        ? "bg-amber-500 text-slate-950 hover:bg-amber-400"
+                        : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700"
+                    }`}
+                  >
+                    {isWakeLockActive ? "Aktif" : "Nonaktif"}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                💡 Tips: Tambahkan ke Layar Utama (Add to Home Screen) untuk akses instan.
+              </p>
+              <button
+                onClick={() => setIsBgInfoOpen(false)}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-sky-500/20 active:scale-95 transition-transform"
+              >
+                Mengerti
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

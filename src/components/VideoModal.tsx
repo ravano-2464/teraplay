@@ -9,6 +9,7 @@ import {
   Minimize2,
   GripHorizontal,
   RotateCcw,
+  PictureInPicture2,
 } from "lucide-react";
 import { TeraBoxFile } from "@/types/terabox";
 import { formatDuration } from "@/lib/formatters";
@@ -183,6 +184,19 @@ export const VideoModal: React.FC<VideoModalProps> = ({
     });
   };
 
+  const handleTogglePiP = async () => {
+    if (typeof document === "undefined") return;
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+      } else if (videoRef.current && document.pictureInPictureEnabled) {
+        await videoRef.current.requestPictureInPicture();
+      }
+    } catch (err) {
+      console.warn("PiP failed in modal:", err);
+    }
+  };
+
   return (
     <div
       onClick={handleClose}
@@ -290,6 +304,18 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                 title="Reset Posisi ke Tengah"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+            {/* Picture-in-Picture Button */}
+            {!isYouTubeMode && (
+              <button
+                type="button"
+                onClick={handleTogglePiP}
+                className="btn-icon p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                title={t.player.pipButton || "Picture-in-Picture (Layar Melayang)"}
+              >
+                <PictureInPicture2 className="w-3.5 h-3.5" />
               </button>
             )}
 

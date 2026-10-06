@@ -120,6 +120,12 @@ export interface Translations {
     adFreeTag: string;
     openVideo: string;
     closePlayer: string;
+    backgroundPlay?: string;
+    backgroundActive?: string;
+    backgroundDesc?: string;
+    wakeLockOn?: string;
+    wakeLockOff?: string;
+    pipButton?: string;
   };
   videoModal: {
     title: string;

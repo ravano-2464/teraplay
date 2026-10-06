@@ -1,12 +1,32 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { I18nProvider } from "@/context/I18nContext";
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#070b14" },
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
+  ],
+};
+
 export const metadata: Metadata = {
-  title: "TeraBox Shows - Folder Inspector & Intelligent Media Player",
-  description: "Aplikasi modern untuk memeriksa isi folder TeraBox, mendeteksi file audio dan video, menampilkan ukuran file dalam MB, serta memutar lagu dan video secara langsung.",
-  keywords: ["terabox", "terabox player", "terabox audio player", "terabox shows", "terabox inspector"],
+  title: "TeraPlay - Folder Inspector & Intelligent Media Player",
+  description: "Aplikasi modern untuk memeriksa isi folder TeraBox, mendeteksi file audio dan video, serta memutar lagu di latar belakang secara lancar bebas iklan.",
+  keywords: ["terabox", "terabox player", "terabox audio player", "terabox shows", "terabox inspector", "background audio", "pemutar latar belakang"],
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "TeraPlay",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
@@ -18,7 +38,9 @@ export default function RootLayout({
     <html lang="id" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/icon.svg" />
+        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <link
           href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
           rel="stylesheet"

@@ -1,0 +1,19 @@
+{
+  "name": "TeraPlay - Media Player & Folder Inspector",
+  "short_name": "TeraPlay",
+  "description": "Pemutar media dan pemeriksa folder TeraBox & YouTube bebas iklan dengan dukungan putar musik di latar belakang.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070b14",
+  "theme_color": "#070b14",
+  "orientation": "any",
+  "categories": ["music", "entertainment", "utilities"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    }
+  ]
+}

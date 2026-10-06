@@ -101,6 +101,12 @@ export const indonesian: Translations = {
     adFreeTag: "⚡ 100% Bebas Iklan",
     openVideo: "Buka Video Modal",
     closePlayer: "Tutup Pemutar",
+    backgroundPlay: "Putar Latar Belakang",
+    backgroundActive: "Latar Belakang Aktif",
+    backgroundDesc: "Musik tetap berputar saat layar HP mati atau saat membuka aplikasi lain.",
+    wakeLockOn: "Layar Tetap Hidup: Aktif",
+    wakeLockOff: "Layar Tetap Hidup: Mati",
+    pipButton: "Picture-in-Picture (PiP)",
   },
   videoModal: {
     title: "Video Player",

@@ -83,6 +83,9 @@ graph TD
 ## 🗂️ Project Structure
 
 ```text
+├── 📁 public
+│   ├── 🖼️ icon.svg
+│   └── ⚙️ manifest.json
 ├── 📁 src
 │   ├── 📁 app
 │   │   ├── 📁 api
@@ -100,7 +103,6 @@ graph TD
 │   │   │       └── 📁 search
 │   │   │           └── 📄 route.ts
 │   │   ├── 🎨 globals.css
-│   │   ├── 🖼️ icon.svg
 │   │   ├── 📄 layout.tsx
 │   │   └── 📄 page.tsx
 │   ├── 📁 components
@@ -126,6 +128,8 @@ graph TD
 │   │   ├── 📄 I18nContext.tsx
 │   │   └── 📄 ThemeContext.tsx
 │   ├── 📁 hooks
+│   │   ├── 📄 useMediaSession.ts
+│   │   ├── 📄 useWakeLock.ts
 │   │   └── 📄 useWatchHistory.ts
 │   ├── 📁 i18n
 │   │   ├── 📁 chinese
