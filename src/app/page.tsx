@@ -65,6 +65,8 @@ const mapYouTubeResultToFile = (item: any): TeraBoxFile => ({
   youtubeChannel: item.channel,
   thumbnailUrl: item.thumbnailUrl,
   youtubeThumbnail: item.thumbnailUrl,
+  views: item.views,
+  uploadedAt: item.uploadedAt,
 });
 
 export default function Home() {
@@ -92,7 +94,7 @@ export default function Home() {
   const [ytErrorMessage, setYtErrorMessage] = useState<string | null>(null);
   const [ytViewMode, setYtViewMode] = useState<"grid" | "table">("grid");
   const [ytPage, setYtPage] = useState(1);
-  const [ytItemsPerPage, setYtItemsPerPage] = useState(24);
+  const [ytItemsPerPage, setYtItemsPerPage] = useState(10);
   const [ytSortBy, setYtSortBy] = useState("default");
 
   // Watch History State & Hook
@@ -207,7 +209,7 @@ export default function Home() {
     setYtQuery(query);
 
     try {
-      const res = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}&limit=30`);
+      const res = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}&limit=50`);
       const data = await res.json();
       if (!res.ok || !data.success) {
         throw new Error(data.error || "Gagal memuat hasil pencarian YouTube");
@@ -858,7 +860,7 @@ export default function Home() {
             {!isYtSearching && paginatedYtFiles.length > 0 && (
               <>
                 {ytViewMode === "grid" ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-4">
                     {paginatedYtFiles.map((track, idx) => (
                       <YouTubeCard
                         key={track.id || `yt-${idx}`}

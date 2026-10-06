@@ -26,6 +26,8 @@ export interface TeraBoxFile {
   youtubeTitle?: string;
   youtubeChannel?: string;
   youtubeThumbnail?: string;
+  views?: string;
+  uploadedAt?: string;
 }
 
 export interface AccountQuota {

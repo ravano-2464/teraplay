@@ -540,9 +540,15 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
     const handleWindowMessage = (event: MessageEvent) => {
       try {
         let msgData = event.data;
-        if (typeof msgData === "string" && msgData.startsWith("{")) {
-          msgData = JSON.parse(msgData);
+        if (typeof msgData === "string") {
+          try {
+            msgData = JSON.parse(msgData);
+          } catch {
+            return;
+          }
         }
+
+        if (!msgData || typeof msgData !== "object") return;
 
         if (msgData?.event === "onReady") {
           if (isPlaying) {
@@ -553,9 +559,10 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
           setHasError(false);
         }
 
-        if (msgData?.event === "infoDelivery" && msgData?.info) {
-          const info = msgData.info;
-          if (typeof info.currentTime === "number" && !isNaN(info.currentTime)) {
+        // InfoDelivery, state changes, or direct info payloads from YouTube iframe
+        const info = msgData.info || msgData.data;
+        if (info && typeof info === "object") {
+          if (typeof info.currentTime === "number" && !isNaN(info.currentTime) && info.currentTime >= 0) {
             setCurrentTime(info.currentTime);
           }
           if (typeof info.duration === "number" && info.duration > 0 && !isNaN(info.duration)) {
@@ -640,6 +647,28 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
     window.addEventListener("message", handleWindowMessage);
     return () => window.removeEventListener("message", handleWindowMessage);
   }, [isYouTubeMode, currentTrack, isPlaying, isMuted, volume, onDurationLoaded, sendYtCommand, setPlayingState]);
+
+  // Real-time smooth timer ticker for YouTube mode playback (continuous 0:00 -> 0:01 -> 0:02...)
+  useEffect(() => {
+    if (!isYouTubeMode || !isPlaying || isBuffering) return;
+
+    let lastTick = performance.now();
+    const interval = setInterval(() => {
+      const now = performance.now();
+      const delta = (now - lastTick) / 1000;
+      lastTick = now;
+
+      setCurrentTime((prev) => {
+        const next = prev + delta * playbackRate;
+        if (duration > 0 && next >= duration) {
+          return duration;
+        }
+        return next;
+      });
+    }, 250);
+
+    return () => clearInterval(interval);
+  }, [isYouTubeMode, isPlaying, isBuffering, duration, playbackRate]);
 
   // Polling backup timer for seekbar updates during YouTube playback
   useEffect(() => {
@@ -1337,8 +1366,8 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
 
               {/* Mobile Row 2: Seekbar & Timers (Full Width Touch Target) */}
               <div className="w-full flex items-center gap-2 text-[10px] font-mono text-slate-500 dark:text-slate-400 px-0.5">
-                <span className="w-8 text-right text-slate-700 dark:text-slate-300 shrink-0">
-                  {formatDuration(currentTime)}
+                <span className="w-8 text-right text-slate-700 dark:text-slate-300 shrink-0 select-none">
+                  {formatDuration(currentTime, true, "0:00")}
                 </span>
                 <div className="relative flex-1 flex items-center">
                   <input
@@ -1352,8 +1381,8 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                     } focus:outline-none`}
                   />
                 </div>
-                <span className="w-8 text-left shrink-0">
-                  {duration > 0 ? formatDuration(duration) : "--:--"}
+                <span className="w-8 text-left shrink-0 select-none">
+                  {duration > 0 ? formatDuration(duration, true, "--:--") : "--:--"}
                 </span>
               </div>
 
@@ -1453,11 +1482,11 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
             </div>
 
             {/* ========================================================================= */}
-            {/* DESKTOP & TABLET LAYOUT (hidden md:flex)                                  */}
+            {/* DESKTOP & TABLET LAYOUT (hidden md:grid grid-cols-12 items-center)       */}
             {/* ========================================================================= */}
-            <div className="hidden md:flex items-center justify-between gap-4 lg:gap-6 pt-1">
-              {/* Left Track Info */}
-              <div className="flex items-center gap-3 min-w-0 max-w-[240px] lg:max-w-[320px]">
+            <div className="hidden md:grid grid-cols-12 items-center gap-2 lg:gap-4 pt-1">
+              {/* Left: Track Info (Col 1-3) */}
+              <div className="col-span-3 lg:col-span-3 xl:col-span-3 min-w-0 flex items-center gap-2.5 lg:gap-3">
                 {/* Album Cover / Disc with Real-time Reactive Equalizer */}
                 <div className="relative w-11 h-11 lg:w-12 lg:h-12 rounded-2xl overflow-hidden shrink-0 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 shadow-md">
                   {activeThumbnail ? (
@@ -1500,41 +1529,42 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                   )}
                 </div>
 
-                {/* Name, Artist, Source & Badge */}
-                <div className="min-w-0">
+                {/* Name, Artist, Source & Ad-Free Badge */}
+                <div className="min-w-0 flex-1">
                   <h4
                     className={`font-bold text-xs lg:text-sm text-slate-900 dark:text-white truncate ${
                       isYouTubeMode ? "hover:text-rose-600 dark:hover:text-rose-400" : "hover:text-emerald-600 dark:hover:text-emerald-400"
                     } transition-colors`}
+                    title={activeTitle}
                   >
                     {activeTitle}
                   </h4>
-                  <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 flex-wrap">
-                    <span className="truncate max-w-[120px] font-medium text-slate-700 dark:text-slate-300">
+                  <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 flex-nowrap min-w-0">
+                    <span className="truncate min-w-0 font-medium text-slate-700 dark:text-slate-300" title={activeArtist}>
                       {activeArtist}
                     </span>
-                    <span className="inline-block w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                    <span className="shrink-0 inline-block w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
                     {isBuffering ? (
-                      <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-200 dark:border-amber-500/20 animate-pulse">
+                      <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-500/20 whitespace-nowrap animate-pulse">
                         <Loader2 className="w-2.5 h-2.5 animate-spin" /> Buffering...
                       </span>
                     ) : isYouTubeMode ? (
-                      <span className="flex items-center gap-1 font-semibold text-rose-600 dark:text-rose-400 text-[10px] bg-rose-50 dark:bg-rose-500/15 px-1.5 py-0.2 rounded border border-rose-200 dark:border-rose-500/30">
-                        <ShieldCheck className="w-2.5 h-2.5 text-rose-500 animate-pulse" /> {t.player.adFreeTag}
+                      <span className="shrink-0 inline-flex items-center gap-1 font-semibold text-rose-600 dark:text-rose-400 text-[10px] bg-rose-50 dark:bg-rose-500/15 px-1.5 py-0.5 rounded-full border border-rose-200 dark:border-rose-500/30 whitespace-nowrap">
+                        <ShieldCheck className="w-2.5 h-2.5 text-rose-500 shrink-0" /> {t.player.adFreeTag}
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400 text-[10px] bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-500/20">
-                        <Radio className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 animate-pulse" /> TeraBox Live
+                      <span className="shrink-0 inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400 text-[10px] bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/20 whitespace-nowrap">
+                        <Radio className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 shrink-0" /> TeraBox Live
                       </span>
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* Center Controls & Seekbar */}
-              <div className="flex flex-col items-center flex-1 max-w-xl">
+              {/* Center: Controls + Full-Width Seekbar (Col 4-9) */}
+              <div className="col-span-6 lg:col-span-6 xl:col-span-6 flex flex-col items-center justify-center px-1 lg:px-4 min-w-0">
                 {/* Control Buttons */}
-                <div className="flex items-center gap-1.5 sm:gap-3 mb-1">
+                <div className="flex items-center gap-2 sm:gap-3.5 mb-1.5">
                   {/* Dedicated Shuffle Button */}
                   <button
                     onClick={handleShuffleToggle}
@@ -1561,6 +1591,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                   <button
                     onClick={onPrevTrack}
                     className="btn-icon btn-icon-bounce-x p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80"
+                    title="Lagu Sebelumnya"
                   >
                     <SkipBack className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
                   </button>
@@ -1587,6 +1618,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                   <button
                     onClick={onNextTrack}
                     className="btn-icon btn-icon-bounce-x p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80"
+                    title="Lagu Berikutnya"
                   >
                     <SkipForward className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
                   </button>
@@ -1631,8 +1663,10 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                 </div>
 
                 {/* Seekbar and Timers */}
-                <div className="w-full flex items-center gap-2 text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                  <span className="w-9 text-right text-slate-700 dark:text-slate-300">{formatDuration(currentTime)}</span>
+                <div className="w-full flex items-center gap-2.5 text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                  <span className="w-9 text-right text-slate-700 dark:text-slate-300 shrink-0 font-medium tabular-nums select-none">
+                    {formatDuration(currentTime, true, "0:00")}
+                  </span>
                   <div className="relative flex-1 group flex items-center">
                     <input
                       type="range"
@@ -1640,55 +1674,55 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                       max={duration > 0 ? duration : 100}
                       value={currentTime}
                       onChange={handleSeek}
-                      className={`w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer ${
+                      className={`w-full h-1.5 group-hover:h-2 transition-all bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer ${
                         isYouTubeMode ? "accent-rose-500 dark:accent-rose-400" : "accent-emerald-500 dark:accent-emerald-400"
                       } focus:outline-none`}
                     />
                   </div>
-                  <span className="w-9">{duration > 0 ? formatDuration(duration) : "--:--"}</span>
+                  <span className="w-9 text-left shrink-0 font-medium tabular-nums select-none">
+                    {duration > 0 ? formatDuration(duration, true, "--:--") : "--:--"}
+                  </span>
                 </div>
               </div>
 
-              {/* Right Tools: Switcher, Visualizer, Volume, Video, Queue */}
-              <div className="flex items-center gap-2 sm:gap-3">
+              {/* Right: Quick Tools (Col 10-12) */}
+              <div className="col-span-3 lg:col-span-3 xl:col-span-3 flex items-center justify-end gap-1.5 lg:gap-2">
                 {/* Switch Mode Button */}
                 {isYouTubeMode ? (
                   <button
                     onClick={handleSwitchToTeraBox}
-                    className="btn-icon btn-icon-wiggle hidden xl:flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-600 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 text-[11px] border border-slate-200 dark:border-slate-700/60 transition-colors"
-                    title="Coba beralih ke stream TeraBox"
+                    className="btn-icon p-2 rounded-xl text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                    title="Beralih ke stream TeraBox (Cloud Direct)"
                   >
-                    <Radio className="w-3 h-3" />
-                    <span>Mode TeraBox</span>
+                    <Radio className="w-4 h-4 text-emerald-500" />
                   </button>
                 ) : (
                   <button
                     onClick={triggerYouTubeFallback}
                     disabled={isSearchingFallback}
-                    className="btn-icon btn-icon-wiggle hidden xl:flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 dark:bg-slate-900 dark:hover:bg-rose-950/40 text-slate-600 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 text-[11px] border border-slate-200 dark:border-slate-700/60 transition-colors"
+                    className="btn-icon p-2 rounded-xl text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
                     title="Putar versi YouTube Bebas Iklan"
                   >
-                    <Youtube className="w-3 h-3 text-rose-500 dark:text-rose-400" />
-                    <span>{isSearchingFallback ? "Mencari..." : "Mode YouTube"}</span>
+                    <Youtube className="w-4 h-4 text-rose-500" />
                   </button>
                 )}
 
                 {/* High-Energy Rhythm Visualizer in deck */}
-                <div className="hidden lg:block w-28 xl:w-32 h-8 shrink-0">
+                <div className="hidden xl:block w-16 2xl:w-20 h-6 shrink-0">
                   <AudioVisualizer
                     isPlaying={isPlaying && !isBuffering && !hasError}
                     audioElement={mediaRef.current}
                     currentTime={currentTime}
                     volume={isMuted ? 0 : volume}
-                    barCount={18}
-                    height={30}
+                    barCount={10}
+                    height={24}
                     theme={isYouTubeMode ? "rose" : "emerald"}
                     showPeaks={true}
                   />
                 </div>
 
                 {/* Volume Slider */}
-                <div className="hidden md:flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <button
                     onClick={handleToggleMute}
                     className="btn-icon p-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -1709,7 +1743,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                     step={0.01}
                     value={isMuted ? 0 : volume}
                     onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                    className={`w-16 sm:w-20 h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer ${
+                    className={`w-12 lg:w-16 h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer ${
                       isYouTubeMode ? "accent-rose-500 dark:accent-rose-400" : "accent-emerald-500 dark:accent-emerald-400"
                     }`}
                   />
@@ -1719,60 +1753,52 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                 {isWakeLockSupported && (
                   <button
                     onClick={toggleWakeLock}
-                    className={`btn-icon btn-icon-wiggle p-2 rounded-xl text-xs flex items-center gap-1.5 border transition-colors ${
+                    className={`btn-icon p-2 rounded-xl text-xs transition-colors ${
                       isWakeLockActive
-                        ? "bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/40 shadow-sm font-bold"
-                        : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700/60"
+                        ? "bg-amber-50 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-500/40 shadow-sm"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80"
                     }`}
                     title={isWakeLockActive ? t.player.wakeLockOn || "Layar Tetap Hidup: AKTIF" : t.player.wakeLockOff || "Layar Tetap Hidup: MATI"}
                   >
-                    <Sun className={`w-4 h-4 ${isWakeLockActive ? "text-amber-500 fill-amber-500 animate-spin-slow" : "text-slate-500"}`} />
-                    <span className="hidden xl:inline">{isWakeLockActive ? "Layar Hidup" : "Layar Auto"}</span>
+                    <Sun className={`w-4 h-4 ${isWakeLockActive ? "text-amber-500 fill-amber-500 animate-spin-slow" : ""}`} />
                   </button>
                 )}
-
-                {/* Background Play Info Button (Desktop) */}
-                <button
-                  onClick={() => setIsBgInfoOpen(true)}
-                  className="btn-icon btn-icon-wiggle p-2 rounded-xl text-xs flex items-center gap-1.5 border bg-slate-100 hover:bg-sky-50 dark:bg-slate-900 dark:hover:bg-sky-950/40 text-slate-700 hover:text-sky-700 dark:text-slate-300 dark:hover:text-sky-300 border-slate-200 dark:border-slate-700/60 transition-colors"
-                  title="Panduan Putar Latar Belakang & Sinkronisasi Lock Screen"
-                >
-                  <Smartphone className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-                  <span className="hidden xl:inline font-semibold">Latar Belakang</span>
-                </button>
 
                 {/* Video Preview Toggle Button */}
                 {isVideoFormat && (
                   <button
                     onClick={() => setShowVideoPreview(!showVideoPreview)}
-                    className={`btn-icon btn-icon-wiggle p-2 rounded-xl text-xs flex items-center gap-1.5 border ${
+                    className={`btn-icon p-2 rounded-xl text-xs transition-colors ${
                       showVideoPreview
                         ? isYouTubeMode
-                          ? "bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 border-rose-200 dark:border-rose-500/40 shadow-sm"
-                          : "bg-cyan-50 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 border-cyan-200 dark:border-cyan-500/40 shadow-sm"
-                        : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700/60"
+                          ? "bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/40 shadow-sm"
+                          : "bg-cyan-50 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-500/40 shadow-sm"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80"
                     }`}
                     title={showVideoPreview ? "Sembunyikan Video" : "Tampilkan Video (Mini Player Bebas Iklan)"}
                   >
-                    <Film className={`w-4 h-4 ${isYouTubeMode ? "text-rose-500 dark:text-rose-400" : "text-cyan-600 dark:text-cyan-400"}`} />
-                    <span className="hidden sm:inline font-semibold">Video</span>
+                    <Film className={`w-4 h-4 ${isYouTubeMode ? "text-rose-500" : "text-cyan-600"}`} />
                   </button>
                 )}
 
                 {/* Playlist Queue Button */}
                 <button
                   onClick={() => setIsQueueOpen(!isQueueOpen)}
-                  className={`btn-icon btn-icon-bounce-y p-2 rounded-xl text-xs flex items-center gap-1.5 border relative ${
+                  className={`btn-icon p-2 rounded-xl text-xs relative transition-colors ${
                     isQueueOpen
                       ? isYouTubeMode
-                        ? "bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 border-rose-200 dark:border-rose-500/40 shadow-sm"
-                        : "bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/40 shadow-sm"
-                      : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700/60"
+                        ? "bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/40 shadow-sm"
+                        : "bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/40 shadow-sm"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80"
                   }`}
                   title="Daftar Putar (Playlist Queue)"
                 >
                   <ListMusic className="w-4 h-4" />
-                  <span className="hidden sm:inline font-semibold">{playlist.length}</span>
+                  {playlist.length > 0 && (
+                    <span className="absolute -top-1 -right-1 px-1 min-w-[14px] h-[14px] text-[8px] font-bold rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center">
+                      {playlist.length}
+                    </span>
+                  )}
                 </button>
 
                 {/* Direct Download button (if available) */}
@@ -1780,7 +1806,7 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
                   <a
                     href={currentTrack.downloadUrl}
                     download={currentTrack.name}
-                    className="btn-icon btn-icon-bounce-y p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 hover:text-emerald-600 dark:text-slate-300 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-700/60"
+                    className="btn-icon p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
                     title={`Download ${currentTrack.name}`}
                   >
                     <Download className="w-4 h-4" />

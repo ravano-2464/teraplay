@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchYouTube, resolveBestYouTubeTrack, cleanSearchQuery, POPULAR_YOUTUBE_TRACKS } from "@/lib/youtubeSearch";
+import {
+  searchYouTube,
+  resolveBestYouTubeTrack,
+  cleanSearchQuery,
+  getYouTubeTrending,
+  POPULAR_YOUTUBE_TRACKS,
+} from "@/lib/youtubeSearch";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -7,17 +13,26 @@ export async function GET(req: NextRequest) {
   const filename = searchParams.get("filename") || "";
   const artist = searchParams.get("artist") || undefined;
   const bestOnly = searchParams.get("best") === "true";
-  const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "20", 10) || 20, 1), 30);
+  const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "40", 10) || 40, 1), 60);
 
   const targetQuery = q || cleanSearchQuery(filename, artist);
 
-  // If no query and not looking for best match of a file, return curated popular tracks
+  // If no query and not looking for best match of a file, return live trending YouTube tracks
   if (!targetQuery) {
-    return NextResponse.json({
-      success: true,
-      query: "",
-      results: POPULAR_YOUTUBE_TRACKS.slice(0, limit),
-    });
+    try {
+      const trending = await getYouTubeTrending(limit);
+      return NextResponse.json({
+        success: true,
+        query: "",
+        results: trending.length > 0 ? trending.slice(0, limit) : POPULAR_YOUTUBE_TRACKS.slice(0, limit),
+      });
+    } catch {
+      return NextResponse.json({
+        success: true,
+        query: "",
+        results: POPULAR_YOUTUBE_TRACKS.slice(0, limit),
+      });
+    }
   }
 
   try {
@@ -46,16 +61,25 @@ export async function POST(req: NextRequest) {
     const filename = body.filename || "";
     const artist = body.artist || undefined;
     const bestOnly = body.bestOnly === true;
-    const limit = Math.min(Math.max(parseInt(body.limit || "20", 10) || 20, 1), 30);
+    const limit = Math.min(Math.max(parseInt(body.limit || "40", 10) || 40, 1), 60);
 
     const targetQuery = q || cleanSearchQuery(filename, artist);
 
     if (!targetQuery) {
-      return NextResponse.json({
-        success: true,
-        query: "",
-        results: POPULAR_YOUTUBE_TRACKS.slice(0, limit),
-      });
+      try {
+        const trending = await getYouTubeTrending(limit);
+        return NextResponse.json({
+          success: true,
+          query: "",
+          results: trending.length > 0 ? trending.slice(0, limit) : POPULAR_YOUTUBE_TRACKS.slice(0, limit),
+        });
+      } catch {
+        return NextResponse.json({
+          success: true,
+          query: "",
+          results: POPULAR_YOUTUBE_TRACKS.slice(0, limit),
+        });
+      }
     }
 
     if (bestOnly) {

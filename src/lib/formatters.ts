@@ -20,12 +20,22 @@ export function formatBytes(bytes: number, decimals: number = 2): string {
 /**
  * Format duration in seconds to "mm:ss" or "hh:mm:ss"
  */
-export function formatDuration(seconds?: number): string {
-  if (!seconds || isNaN(seconds) || seconds <= 0) return "--:--";
+export function formatDuration(
+  seconds?: number | null,
+  allowZero: boolean = true,
+  fallback: string = "--:--"
+): string {
+  if (seconds === undefined || seconds === null || isNaN(seconds) || seconds < 0) {
+    return fallback;
+  }
+  if (seconds === 0) {
+    return allowZero ? "0:00" : fallback;
+  }
 
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = Math.floor(seconds % 60);
+  const total = Math.floor(seconds);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = Math.floor(total % 60);
 
   const formattedM = m < 10 && h > 0 ? `0${m}` : `${m}`;
   const formattedS = s < 10 ? `0${s}` : `${s}`;
