@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 
 export interface MediaSessionMetadataOptions {
   title: string;
@@ -18,9 +18,6 @@ export interface MediaSessionMetadataOptions {
   onSeek: (newTime: number) => void;
 }
 
-// 1-second silent WAV data URI for holding OS audio focus in background tabs/lockscreen on mobile
-const SILENT_AUDIO_URI = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAP8A";
-
 export function useMediaSession(options: MediaSessionMetadataOptions) {
   const {
     title,
@@ -37,8 +34,6 @@ export function useMediaSession(options: MediaSessionMetadataOptions) {
     onPrevTrack,
     onSeek,
   } = options;
-
-  const keepAliveAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // References to keep event handlers fresh without re-registering action handlers on every render
   const handlersRef = useRef({
@@ -175,35 +170,4 @@ export function useMediaSession(options: MediaSessionMetadataOptions) {
       }
     }
   }, [currentTime, duration, playbackRate]);
-
-  // Background Audio Keep-Alive for mobile devices
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    if (!keepAliveAudioRef.current) {
-      const audio = new Audio(SILENT_AUDIO_URI);
-      audio.loop = true;
-      audio.volume = 0.01;
-      audio.preload = "auto";
-      audio.setAttribute("playsinline", "true");
-      audio.setAttribute("webkit-playsinline", "true");
-      keepAliveAudioRef.current = audio;
-    }
-
-    const keepAlive = keepAliveAudioRef.current;
-
-    if (isPlaying) {
-      keepAlive.play().catch(() => {
-        // Autoplay restrictions may require user interaction first
-      });
-    } else {
-      keepAlive.pause();
-    }
-
-    return () => {
-      if (keepAlive) {
-        keepAlive.pause();
-      }
-    };
-  }, [isPlaying]);
 }

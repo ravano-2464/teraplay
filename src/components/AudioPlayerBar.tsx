@@ -1022,12 +1022,14 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
         </div>
       </div>
 
-      {/* Hidden HTML5 Audio Player element when not in mini-video and not in YouTube mode */}
+      {/* HTML5 Audio Player element when not in mini-video and not in YouTube mode */}
       {!isYouTubeMode && !showVideoPreview && (
         <audio
           ref={mediaRef as React.RefObject<HTMLAudioElement>}
           preload="auto"
           playsInline
+          // @ts-ignore
+          webkit-playsinline="true"
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
           onDurationChange={handleDurationChange}
@@ -1050,7 +1052,17 @@ export const AudioPlayerBar: React.FC<AudioPlayerBarProps> = ({
           }}
           onError={handleError}
           onEnded={handleEnded}
-          className="hidden"
+          style={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            width: "1px",
+            height: "1px",
+            opacity: 0.001,
+            pointerEvents: "none",
+            zIndex: -1,
+          }}
+          aria-hidden="true"
         />
       )}
 
